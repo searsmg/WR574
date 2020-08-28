@@ -12,7 +12,7 @@ Max<-read.csv("C:/Users/sears/Documents/4_Classes_FA20/WR 574/Assignments/Data A
 TS<-read.csv("C:/Users/sears/Documents/4_Classes_FA20/WR 574/Assignments/Data Analysis Survey/TS_PeakSWE.csv", header=TRUE)%>%
   mutate(date = mdy(date))
 
-Max$DayMo<-
+
   
   ## All 508-compliant color scheme -- 
   colors2 <- c("light blue", "red")
