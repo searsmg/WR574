@@ -5,6 +5,7 @@ library(dplyr)
 library(scales)
 library(Hmisc)
 library(lubridate)
+library(openair)
 
 setwd("C:/Users/sears/Documents/4_Classes_FA20/WR 574/Assignments/Assignment 1/")
 
@@ -94,3 +95,16 @@ ggplot(DailyQ, aes(x=datetime, y=discharge_cms, group=1)) +
   geom_line(size = 1, colour = "black", stat="identity") + labs(x="Date", y="Daily Discharge [m^3/s]") + scale_y_continuous(breaks = scales::pretty_breaks(n = 10)) + scale_x_date(date_labels = "%b", date_breaks = "31 days") + theme_classic()+ PlotTheme 
 
 ggsave(paste(PLOT,".png",sep=""), width = PlotWidth, height = PlotHeight)
+
+##WIND ROSE
+WindRose <- read.csv("C:/Users/sears/Documents/4_Classes_FA20/WR 574/Assignments/Assignment 1/windrose.csv", header=TRUE)%>%
+  mutate(datetime = mdy_hm(datetime))
+
+windRose(WindRose, ws = "WindSp_ms", wd = "WindDir_DegfromN", ws2 = NA, wd2 = NA,
+         ws.int = 2, angle = 30, type = "default", bias.corr = TRUE, cols
+         = "jet", grid.line = NULL, width = 1.5, seg = NULL, auto.text
+         = TRUE, breaks = 6, offset = 10, normalise = FALSE, max.freq =
+           NULL, paddle = FALSE, key.header = NULL, key.footer = "(m/s)",
+         key.position = "bottom", key = list(height=1), dig.lab = 5, statistic =
+           "prop.count", pollutant = NULL, annotate = TRUE, angle.scale =
+           315, border = NA)
