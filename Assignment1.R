@@ -30,30 +30,56 @@ PlotTheme = theme(axis.text=element_text(size=20),    #Text size for axis tick m
 #factor so months are in correct order
 MonthlyStats$Month <- factor(MonthlyStats$Month, levels=c("Sep", "Oct", "Nov", "Dec", "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug"))
 
+# a really long and annoying way to create minor tick axis tick marks
+every_nth <- function(x, nth, empty = TRUE, inverse = FALSE) 
+{
+  if (!inverse) {
+    if(empty) {
+      x[1:nth == 1] <- ""
+      x
+    } else {
+      x[1:nth != 1]
+    }
+  } else {
+    if(empty) {
+      x[1:nth != 1] <- ""
+      x
+    } else {
+      x[1:nth == 1]
+    }
+  }
+}
+
+
 ###PRECIP
 PLOT ="Monthly Sum of Precip_Line"
+custom_breaks1 <- seq(0, 160, 5)
+
 ggplot(MonthlyStats, aes(x=Month, y=SumPrecip_mm, group=1)) +
-  geom_line(size = 1, colour = "black", stat="identity") + labs(x="Month", y="Total Monthly Precipitation [mm]") + scale_x_discrete(labels=MonthLabels) + scale_y_continuous(breaks = scales::pretty_breaks(n = 6)) + theme_classic()+ PlotTheme 
+  geom_line(size = 1, colour = "black", stat="identity") + labs(x="Month", y="Total Monthly Precipitation [mm]") + scale_x_discrete(labels=MonthLabels) + scale_y_continuous(breaks = custom_breaks1, labels = every_nth(custom_breaks1, 4, inverse=TRUE)) + theme_classic()+ PlotTheme 
 
 ggsave(paste(PLOT,".png",sep=""), width = PlotWidth, height = PlotHeight)
 
 #TEMP
 PLOT="Monthly Temps"
-ggplot(MonthlyStats) + geom_line(aes(x=Month, y=MaxTemp_C, group=1, colour="Max Temp"), size=1) + geom_line(aes(x=Month, y=MinTemp_C, group=1, colour="Min Temp"), size=1) + geom_line(aes(x=Month, y=AvgTemp_C, group=1, colour="Avg Temp"), size=1) + labs(x="Month", y="Air Temperature [deg C]") + scale_x_discrete(labels=MonthLabels) + scale_y_continuous(breaks = scales::pretty_breaks(n = 7)) + theme_classic()+ PlotTheme + scale_color_manual(values = c("black", "red", "blue"))
+custom_breaks2 <- seq(-20, 40, 5)
+ggplot(MonthlyStats) + geom_line(aes(x=Month, y=MaxTemp_C, group=1, colour="Max Temp"), size=1) + geom_line(aes(x=Month, y=MinTemp_C, group=1, colour="Min Temp"), size=1) + geom_line(aes(x=Month, y=AvgTemp_C, group=1, colour="Avg Temp"), size=1) + labs(x="Month", y="Air Temperature [deg C]") + scale_x_discrete(labels=MonthLabels) + scale_y_continuous(breaks = custom_breaks2, labels = every_nth(custom_breaks2, 2, inverse=TRUE)) + theme_classic()+ PlotTheme + scale_color_manual(values = c("black", "red", "blue"))
 
 ggsave(paste(PLOT,".png",sep=""), width = PlotWidth, height = PlotHeight)
 
 
 ###RH
 PLOT ="Monthly RH"
+custom_breaks3 <- seq(50, 85, 1)
 ggplot(MonthlyStats, aes(x=Month, y=AvgRH_., group=1)) +
-  geom_line(size = 1, colour = "black", stat="identity") + labs(x="Month", y="RH [%]") + scale_x_discrete(labels=MonthLabels) + scale_y_continuous(breaks = scales::pretty_breaks(n = 8)) + theme_classic()+ PlotTheme 
+  geom_line(size = 1, colour = "black", stat="identity") + labs(x="Month", y="RH [%]") + scale_x_discrete(labels=MonthLabels) + scale_y_continuous(breaks = custom_breaks3, labels = every_nth(custom_breaks3, 4, inverse=TRUE)) + theme_classic()+ PlotTheme 
 
 ggsave(paste(PLOT,".png",sep=""), width = PlotWidth, height = PlotHeight)
 
 #WIND SPEED
 PLOT="Monthly Wind Speeds"
-ggplot(MonthlyStats) + geom_line(aes(x=Month, y=AvgWindSpeed_m.s, group=1, colour="Avg Wind Speed"), size=1) + geom_line(aes(x=Month, y=MaxWindSpeed_m.s, group=1, colour="Max Wind Speed"), size=1) + labs(x="Month", y="Wind Speed [m/s]") + scale_x_discrete(labels=MonthLabels) + scale_y_continuous(breaks = scales::pretty_breaks(n = 7)) + theme_classic()+ PlotTheme + scale_color_manual(values = c("black", "blue"))
+custom_breaks4 <- seq(0, 25, 1)
+ggplot(MonthlyStats) + geom_line(aes(x=Month, y=AvgWindSpeed_m.s, group=1, colour="Avg Wind Speed"), size=1) + geom_line(aes(x=Month, y=MaxWindSpeed_m.s, group=1, colour="Max Wind Speed"), size=1) + labs(x="Month", y="Wind Speed [m/s]") + scale_x_discrete(labels=MonthLabels) + scale_y_continuous(breaks=custom_breaks4, labels = every_nth(custom_breaks4, 5, inverse=TRUE)) + theme_classic()+ PlotTheme + scale_color_manual(values = c("black", "blue"))
 
 ggsave(paste(PLOT,".png",sep=""), width = PlotWidth, height = PlotHeight)
 
@@ -64,22 +90,25 @@ SNOTEL <- read.csv("C:/Users/sears/Documents/4_Classes_FA20/WR 574/Assignments/A
 
 ##SWE
 PLOT ="Daily SWE"
+custom_breaks5 <- seq(0, 270, 10)
 ggplot(SNOTEL, aes(x=Date, y=SWE_mm, group=1)) +
-  geom_line(size = 1, colour = "black", stat="identity") + labs(x="Date", y="SWE [mm]") + scale_y_continuous(breaks = scales::pretty_breaks(n = 10)) + scale_x_date(date_labels = "%b", date_breaks = "31 days") + theme_classic()+ PlotTheme 
+  geom_line(size = 1, colour = "black", stat="identity") + labs(x="Date", y="SWE [mm]") + scale_y_continuous(breaks=custom_breaks5, labels= every_nth(custom_breaks5, 5, inverse=TRUE)) + scale_x_date(date_labels = "%b", date_breaks = "31 days") + theme_classic()+ PlotTheme 
 
 ggsave(paste(PLOT,".png",sep=""), width = PlotWidth, height = PlotHeight)
 
 ##SNOW DEPTH
 PLOT ="Daily Snow Depth"
+custom_breaks6 <- seq(0, 1, 0.05)
 ggplot(SNOTEL, aes(x=Date, y=SnowDpeth_m, group=1)) +
-  geom_line(size = 1, colour = "black", stat="identity") + labs(x="Date", y="Snow Depth [m]") + scale_y_continuous(breaks = scales::pretty_breaks(n = 10)) + scale_x_date(date_labels = "%b", date_breaks = "31 days") + theme_classic()+ PlotTheme 
+  geom_line(size = 1, colour = "black", stat="identity") + labs(x="Date", y="Snow Depth [m]") + scale_y_continuous(breaks=custom_breaks6, labels = every_nth(custom_breaks6, 2, inverse=TRUE)) + scale_x_date(date_labels = "%b", date_breaks = "31 days") + theme_classic()+ PlotTheme 
 
 ggsave(paste(PLOT,".png",sep=""), width = PlotWidth, height = PlotHeight)
 
 ##SNOW DENSITY
 PLOT ="Daily Snow Density"
+custom_breaks7 <- seq(0, 700, 20)
 ggplot(SNOTEL, aes(x=Date, y=density_kgm3, group=1)) +
-  geom_line(size = 1, colour = "black", stat="identity") + labs(x="Date", y="Snow Density [kg/m^3]")+ scale_y_continuous(breaks = scales::pretty_breaks(n = 10)) + scale_x_date(date_labels = "%b", date_breaks = "31 days") + theme_classic() + PlotTheme 
+  geom_line(size = 1, colour = "black", stat="identity") + labs(x="Date", y="Snow Density [kg/m^3]")+ scale_y_continuous(breaks=custom_breaks7, labels=every_nth(custom_breaks7, 5, inverse=TRUE)) + scale_x_date(date_labels = "%b", date_breaks = "31 days") + theme_classic() + PlotTheme 
 
 ggsave(paste(PLOT,".png",sep=""), width = PlotWidth, height = PlotHeight)
 
@@ -91,8 +120,9 @@ DailyQ <- read.csv("C:/Users/sears/Documents/4_Classes_FA20/WR 574/Assignments/A
 
 ##DAILY Q
 PLOT ="Daily Q"
+custom_breaks8 <- seq(0, 2, 0.1)
 ggplot(DailyQ, aes(x=datetime, y=discharge_cms, group=1)) +
-  geom_line(size = 1, colour = "black", stat="identity") + labs(x="Date", y="Daily Discharge [m^3/s]") + scale_y_continuous(breaks = scales::pretty_breaks(n = 10)) + scale_x_date(date_labels = "%b", date_breaks = "31 days") + theme_classic()+ PlotTheme 
+  geom_line(size = 1, colour = "black", stat="identity") + labs(x="Date", y="Daily Discharge [m^3/s]") + scale_y_continuous(breaks = custom_breaks8, labels = every_nth(custom_breaks8, 2, inverse=TRUE)) + scale_x_date(date_labels = "%b", date_breaks = "31 days") + theme_classic()+ PlotTheme 
 
 ggsave(paste(PLOT,".png",sep=""), width = PlotWidth, height = PlotHeight)
 
