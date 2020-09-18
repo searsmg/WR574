@@ -5,7 +5,7 @@ library(dplyr)
 library(scales)
 library(Hmisc)
 library(lubridate)
-library(openair)
+library(stringr)
 
 setwd("C:/Users/sears/Documents/4_Classes_FA20/WR 574/Assignments/Assignment 2/")
 
@@ -18,6 +18,7 @@ LandCover <- read.csv("C:/Users/sears/Documents/4_Classes_FA20/WR 574/Assignment
 PlotWidth = 15
 PlotHeight = 9
 
+# dont use this plot theme in future bc it was tweaked #
 PlotTheme = theme(axis.text=element_text(size=20),    #Text size for axis tick mark labels
                   axis.title.x=element_text(size=24, hjust=0.5, margin=margin(t=20, r=20, b=20, l=20)),               #Text size and alignment for x-axis label
                   axis.title.y=element_text(size=24, vjust=0.5,  margin=margin(t=20, r=20, b=20, l=20)),              #Text size and alignment for y-axis label
@@ -45,11 +46,15 @@ every_nth <- function(x, nth, empty = TRUE, inverse = FALSE)
     }
   }
 }
+
+#for wrapping text so it fits on x axis
+LandCover$Land_CoverWrap = str_wrap(LandCover$Land_Cover, width = 10)
+
 ##########################################################################
 
 ##Col graph of land cover types or Mill Creek basin
 PLOT ="LULC_Plot"
 custom_breaks <- seq(0, 100, 5)
-ggplot(LandCover, aes(x=Land_Cover, y=Percent)) + geom_bar(stat="identity") + theme_classic() + labs(x="Land Cover", y="Percent") + scale_y_continuous(breaks = custom_breaks, labels = every_nth(custom_breaks, 2, inverse=TRUE)) + geom_errorbarh(aes(xmax=as.numeric(Land_Cover)+0.45,xmin=as.numeric(Land_Cover)-0.45,height=0),position=position_dodge(width=0.9))
+ggplot(LandCover, aes(x=Land_Cover, y=Percent)) + geom_bar(stat="identity") + theme_classic() + labs(x="Land Cover", y="Percent") + scale_y_continuous(breaks = custom_breaks, labels = every_nth(custom_breaks, 2, inverse=TRUE)) + geom_errorbarh(aes(xmax=as.numeric(Land_Cover)+0.45,xmin=as.numeric(Land_Cover)-0.45,height=0),position=position_dodge(width=0.9)) + PlotTheme + scale_x_discrete(labels=function(x) str_wrap(x, width=10))
 
 ggsave(paste(PLOT,".png",sep=""), width = PlotWidth, height = PlotHeight)
