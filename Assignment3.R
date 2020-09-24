@@ -1,6 +1,7 @@
 #Assignment 3 for WR574 - Cloud Cover and Precip Freq
 
 rm(list=ls())
+
 library(ggplot2)
 library(dplyr)
 library(lubridate)
@@ -10,8 +11,10 @@ library(RColorBrewer)
 setwd("C:/Users/sears/Documents/4_Classes_FA20/WR 574/Assignments/Assignment 3/")
 
 #Kalispell ASOS station hourly data. Mutate date to work with in R 
-Kal <- read.csv("C:/Users/sears/Documents/4_Classes_FA20/WR 574/Assignments/Assignment 3/Assignment3_KalASOS.csv")%>%
+Kal <- read.csv("C:/Users/sears/Documents/4_Classes_FA20/WR 574/Assignments/Assignment 3/Assignment3_KalASOS.csv", na.rm=TRUE)%>%
       mutate(date.time = mdy_hm(date.time))
+
+Kal <-na.omit(Kal)
 
 ###########################################################################
 ########################PLOT FORMATTING###################################
@@ -55,7 +58,7 @@ every_nth <- function(x, nth, empty = TRUE, inverse = FALSE)
 ##################################################################
 
 #add cloud fraction number column based on cloud descriptions
-Kal$CloudFrac <- recode(Kal$skyc1, "BKN" = 6/8, "CLR" = 0/8, "FEW" = 1/8, "OVC" = 8/8, "SCT" = 3.5/8, "VV" = 9/8)
+Kal$CloudFrac <- recode(Kal$skyc1, "BKN" = 6/8, "CLR" = 0/8, "FEW" = 1/8, "OVC" = 8/8, "SCT" = 3.5/8)
 
 #get freq value
 KalCloud <- Kal %>%
@@ -68,16 +71,24 @@ write.csv(KalCloud, "KalCloud.csv")
       
 #imported df of monthly freq
 KalCloud_Mo <- read.csv("C:/Users/sears/Documents/4_Classes_FA20/WR 574/Assignments/Assignment 3/KalCloud_Month.csv")
-      
+
+KalCloud_MoAvg <- Kal %>%
+  mutate(month= month(date.time)) %>%
+  group_by(month) %>%
+  summarize(MonthAvg = mean(CloudFrac))
+
 #factor so months are in correct order - THIS IS FOR GGPLOT SO IT DOESN'T MIX UP THE MONTHS 
-KalCloud_Mo$Month <- factor(KalCloud_Mo$Month, levels=c(9, 10, 11, 12, 1, 2, 3, 4, 5, 6, 7, 8))
+KalCloud_Mo$month <- factor(KalCloud_Mo$month, levels=c(9, 10, 11, 12, 1, 2, 3, 4, 5, 6, 7, 8))
 
 #factor so cloud type are in order below (least to greatest CC)
 KalCloud_Mo$CloudTyp <- factor(KalCloud_Mo$CloudTyp, levels=c("CLR", "FEW", "SCT", "BKN", "OVC"))
 
 #CC freq col plot
 PLOT = "Cloud Cov Freq"
-custombreaks1 <- seq(0,80, 5)
-ggplot(KalCloud_Mo, aes(x=factor(Month), y=Freq, fill=factor(CloudTyp))) + geom_col(position="dodge2") + theme_classic() + PlotTheme + labs(x="Month", y="Frequency (%)") + scale_x_discrete(labels=MonthLabels) + scale_y_continuous(breaks = custombreaks1, labels = every_nth(custombreaks1, 4, inverse=TRUE)) + scale_fill_brewer(palette = "Dark2")
+custombreaks1 <- seq(0,100, 5)
+ggplot() + geom_col(data = KalCloud_Mo, aes(x=factor(month), y=freq*100, fill=factor(CloudTyp))) + theme_classic() + PlotTheme + labs(x="Month", y="Frequency (%)") + scale_x_discrete(labels=MonthLabels) + scale_fill_brewer(palette = "Dark2") + scale_y_continuous(breaks = custombreaks1, labels = every_nth(custombreaks1, 2, inverse=TRUE)) + geom_line(data = KalCloud_MoAvg, aes(x=month, y=MonthAvg*100, color="Avg. Cloud Fraction"), group=1, size=2) + scale_color_manual(values="black")
 
 ggsave(paste(PLOT,".png",sep=""), width = PlotWidth, height = PlotHeight)
+
+
+
