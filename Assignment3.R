@@ -89,8 +89,8 @@ KalCloud_Mo$CloudTyp <- factor(KalCloud_Mo$CloudTyp, levels=c("CLR", "FEW", "SCT
 
 #CC freq col plot
 PLOT = "Cloud Cov Freq"
-custombreaks1 <- seq(0,100, 5)
-ggplot() + geom_col(data = KalCloud_Mo, aes(x=factor(month), y=freq*100, fill=factor(CloudTyp))) + theme_classic() + PlotTheme + labs(x="Month", y="Cloud Cover Frequency (%)") + scale_x_discrete(labels=MonthLabels) + scale_fill_brewer(palette = "Dark2") + scale_y_continuous(breaks = custombreaks1, labels = every_nth(custombreaks1, 2, inverse=TRUE)) + geom_line(data = KalCloud_MoAvg, aes(x=month, y=MonthAvg*100, color="Avg. Cloud Fraction"), group=1, size=2) + scale_color_manual(values="black")
+custombreaks1 <- seq(0,1, 0.05)
+ggplot() + geom_col(data = KalCloud_Mo, aes(x=factor(month), y=freq, fill=factor(CloudTyp))) + theme_classic() + PlotTheme + labs(x="Month", y="Cloud Cover Frequency") + scale_x_discrete(labels=MonthLabels) + scale_fill_brewer(palette = "Dark2") + scale_y_continuous(breaks = custombreaks1, labels = every_nth(custombreaks1, 2, inverse=TRUE)) + geom_line(data = KalCloud_MoAvg, aes(x=month, y=MonthAvg, color="Avg. Cloud Fraction"), group=1, size=2) + scale_color_manual(values="black")
 
 ggsave(paste(PLOT,".png",sep=""), width = PlotWidth, height = PlotHeight)
 
@@ -154,8 +154,8 @@ KalPrecip <- bind_rows(KalPrecip_T, KalPrecip_noT)
 KalPrecip$month <- factor(KalPrecip$month, levels=c(9, 10, 11, 12, 1, 2, 3, 4, 5, 6, 7, 8))
 
 PLOT = "Precip Freq"
-custombreaks1 <- seq(0,100, 5)
-ggplot() + geom_col(data = KalPrecip, aes(x=factor(month), y=freq*100, fill=newcol), position="dodge2") + theme_classic() + PlotTheme + labs(x="Month", y="Precip Frequency (%)") + scale_x_discrete(labels=MonthLabels) + scale_fill_brewer(palette = "Dark2") + scale_y_continuous(breaks = custombreaks1, labels = every_nth(custombreaks1, 2, inverse=TRUE)) 
+custombreaks1 <- seq(0, 1, 0.05)
+ggplot() + geom_col(data = KalPrecip, aes(x=factor(month), y=freq, fill=newcol), position="dodge2") + theme_classic() + PlotTheme + labs(x="Month", y="Precip Frequency") + scale_x_discrete(labels=MonthLabels) + scale_fill_brewer(palette = "Dark2") + scale_y_continuous(breaks = custombreaks1, labels = every_nth(custombreaks1, 2, inverse=TRUE)) 
 
 ggsave(paste(PLOT,".png",sep=""), width = PlotWidth, height = PlotHeight)
 
@@ -212,15 +212,15 @@ Clouds_Mean$month <- factor(Clouds_Mean$month, levels=c(9, 10, 11, 12, 1, 2, 3, 
 
 #CC freq col plot FOR ALL CLOUD DECKS
 PLOT = "Cloud Cov Freq - ALL DECKS"
-custombreaks1 <- seq(0,100, 5)
-ggplot() + geom_col(data = Clouds_Mean, aes(x=factor(month), y=freq*100, fill=factor(CloudTyp))) + theme_classic() + PlotTheme + labs(x="Month", y="Cloud Cover Frequency (%)") + scale_x_discrete(labels=MonthLabels) + scale_fill_brewer(palette = "Dark2") + scale_y_continuous(breaks = custombreaks1, labels = every_nth(custombreaks1, 2, inverse=TRUE)) 
+custombreaks1 <- seq(0,1, 0.05)
+ggplot() + geom_col(data = Clouds_Mean, aes(x=factor(month), y=freq, fill=factor(CloudTyp))) + theme_classic() + PlotTheme + labs(x="Month", y="Cloud Cover Frequency") + scale_x_discrete(labels=MonthLabels) + scale_fill_brewer(palette = "Dark2") + scale_y_continuous(breaks = custombreaks1, labels = every_nth(custombreaks1, 2, inverse=TRUE)) 
 
 ggsave(paste(PLOT,".png",sep=""), width = PlotWidth, height = PlotHeight)
 
 ## CC freq for lower deck
 PLOT = "Cloud Cov Freq - Low Deck"
-custombreaks1 <- seq(0,100, 5)
-ggplot() + geom_col(data = KalCloud_Mo, aes(x=factor(month), y=freq*100, fill=factor(CloudTyp))) + theme_classic() + PlotTheme + labs(x="Month", y="Cloud Cover Frequency (%)") + scale_x_discrete(labels=MonthLabels) + scale_fill_brewer(palette = "Dark2") + scale_y_continuous(breaks = custombreaks1, labels = every_nth(custombreaks1, 2, inverse=TRUE)) 
+custombreaks1 <- seq(0,1, 0.05)
+ggplot() + geom_col(data = KalCloud_Mo, aes(x=factor(month), y=freq, fill=factor(CloudTyp))) + theme_classic() + PlotTheme + labs(x="Month", y="Cloud Cover Frequency") + scale_x_discrete(labels=MonthLabels) + scale_fill_brewer(palette = "Dark2") + scale_y_continuous(breaks = custombreaks1, labels = every_nth(custombreaks1, 2, inverse=TRUE)) 
 
 ggsave(paste(PLOT,".png",sep=""), width = PlotWidth, height = PlotHeight)
 
@@ -255,7 +255,7 @@ CrystalTyp$month <- factor(CrystalTyp$month, levels=c(9, 10, 11, 12, 1, 2, 3, 4,
 
 ## CC freq for lower deck
 PLOT = "Crystal Freq"
-custombreaks1 <- seq(0,100, 5)
-ggplot() + geom_col(data = CrystalTyp, aes(x=factor(month), y=freq*100, fill=factor(CrystalTyp))) + theme_classic() + PlotTheme + labs(x="Month", y="Cloud Cover Frequency (%)") + scale_x_discrete(labels=MonthLabels) + scale_fill_brewer(palette = "Dark2") + scale_y_continuous(breaks = custombreaks1, labels = every_nth(custombreaks1, 2, inverse=TRUE)) 
+custombreaks1 <- seq(0,1, 0.05)
+ggplot() + geom_col(data = CrystalTyp, aes(x=factor(month), y=freq, fill=factor(CrystalTyp))) + theme_classic() + PlotTheme + labs(x="Month", y="Cloud Cover Frequency") + scale_x_discrete(labels=MonthLabels) + scale_fill_brewer(palette = "Dark2") + scale_y_continuous(breaks = custombreaks1, labels = every_nth(custombreaks1, 2, inverse=TRUE)) 
 
 ggsave(paste(PLOT,".png",sep=""), width = PlotWidth, height = PlotHeight)
