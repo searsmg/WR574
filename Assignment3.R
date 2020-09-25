@@ -56,6 +56,7 @@ every_nth <- function(x, nth, empty = TRUE, inverse = FALSE)
 }
 
 ##################################################################
+#QUESTION 1
 
 #add cloud fraction number column based on cloud descriptions
 Kal$CloudFrac <- recode(Kal$skyc1, "BKN" = 6/8, "CLR" = 0/8, "FEW" = 1/8, "OVC" = 8/8, "SCT" = 3.5/8)
@@ -86,9 +87,60 @@ KalCloud_Mo$CloudTyp <- factor(KalCloud_Mo$CloudTyp, levels=c("CLR", "FEW", "SCT
 #CC freq col plot
 PLOT = "Cloud Cov Freq"
 custombreaks1 <- seq(0,100, 5)
-ggplot() + geom_col(data = KalCloud_Mo, aes(x=factor(month), y=freq*100, fill=factor(CloudTyp))) + theme_classic() + PlotTheme + labs(x="Month", y="Frequency (%)") + scale_x_discrete(labels=MonthLabels) + scale_fill_brewer(palette = "Dark2") + scale_y_continuous(breaks = custombreaks1, labels = every_nth(custombreaks1, 2, inverse=TRUE)) + geom_line(data = KalCloud_MoAvg, aes(x=month, y=MonthAvg*100, color="Avg. Cloud Fraction"), group=1, size=2) + scale_color_manual(values="black")
+ggplot() + geom_col(data = KalCloud_Mo, aes(x=factor(month), y=freq*100, fill=factor(CloudTyp))) + theme_classic() + PlotTheme + labs(x="Month", y="Cloud Cover Frequency (%)") + scale_x_discrete(labels=MonthLabels) + scale_fill_brewer(palette = "Dark2") + scale_y_continuous(breaks = custombreaks1, labels = every_nth(custombreaks1, 2, inverse=TRUE)) + geom_line(data = KalCloud_MoAvg, aes(x=month, y=MonthAvg*100, color="Avg. Cloud Fraction"), group=1, size=2) + scale_color_manual(values="black")
 
 ggsave(paste(PLOT,".png",sep=""), width = PlotWidth, height = PlotHeight)
 
+###############################################################################
+#QUESTION 2
+#no trace included
+Kal_noT <- Kal[!(Kal$HourlyPrecip_in=="T"),]
 
+Kal_PrecipFreq <- Kal_noT %>%
+  mutate(Precip_Y_N =  case_when(
+    HourlyPrecip_in == 0 ~ "No Precip"))
 
+Kal_PrecipFreq[is.na(Kal_PrecipFreq)] = "Precip"
+
+KalPrecipFreq_Mo <- Kal_PrecipFreq %>%
+  mutate(month = month(date.time)) %>%
+  group_by(month, Precip_Y_N) %>%
+  summarize(n=n()) %>%
+  mutate(freq = n / sum(n))
+
+#trace included
+Kal_Tfix <- read.csv("C:/Users/sears/Documents/4_Classes_FA20/WR 574/Assignments/Assignment 3/Kal_T.csv")
+
+Kal_PrecipFreq_T <- Kal_T %>%
+  mutate(Precip_Y_N =  case_when(
+    HourlyPrecip_in == 0 ~ "No Precip"))
+
+Kal_PrecipFreq_T[is.na(Kal_PrecipFreq_T)] = "Precip"
+
+KalPrecipFreqT_Mo <- Kal_PrecipFreq_T %>%
+  mutate(month = month(date.time)) %>%
+  group_by(month, Precip_Y_N) %>%
+  summarize(n=n()) %>%
+  mutate(freq = n / sum(n))
+
+KalPrecip_noT <- KalPrecipFreq_Mo %>%
+  filter(Precip_Y_N == "Precip")
+
+KalPrecip_T <- KalPrecipFreqT_Mo%>%
+  filter(Precip_Y_N == "Precip")
+
+KalPrecip_noT <- KalPrecip_noT %>%
+  mutate(newcol = "Precip w/ no trace")
+
+KalPrecip_T <- KalPrecip_T %>%
+  mutate(newcol = "Precip w/ trace")
+
+KalPrecip <- bind_rows(KalPrecip_T, KalPrecip_noT)
+
+PLOT = "Precip Freq"
+custombreaks1 <- seq(0,100, 5)
+ggplot() + geom_col(data = KalPrecip, aes(x=factor(month), y=freq*100, fill=newcol), position="dodge2") + theme_classic() + PlotTheme + labs(x="Month", y="Precip Frequency (%)") + scale_x_discrete(labels=MonthLabels) + scale_fill_brewer(palette = "Dark2") + scale_y_continuous(breaks = custombreaks1, labels = every_nth(custombreaks1, 2, inverse=TRUE)) 
+
+ggsave(paste(PLOT,".png",sep=""), width = PlotWidth, height = PlotHeight)
+
+######################################
