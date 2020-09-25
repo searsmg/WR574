@@ -257,6 +257,6 @@ CrystalTyp$month <- factor(CrystalTyp$month, levels=c(9, 10, 11, 12, 1, 2, 3, 4,
 ## CC freq for lower deck
 PLOT = "Crystal Freq"
 custombreaks1 <- seq(0,1, 0.05)
-ggplot() + geom_col(data = CrystalTyp, aes(x=factor(month), y=freq, fill=factor(CrystalTyp))) + theme_classic() + PlotTheme + labs(x="Month", y="Cloud Cover Frequency") + scale_x_discrete(labels=MonthLabels) + scale_fill_brewer(palette = "Spectral") + scale_y_continuous(breaks = custombreaks1, labels = every_nth(custombreaks1, 2, inverse=TRUE)) 
+ggplot() + geom_col(data = CrystalTyp, aes(x=factor(month), y=freq, fill=factor(CrystalTyp))) + theme_classic() + PlotTheme + labs(x="Month", y="Precipitaion Form and/or Shape") + scale_x_discrete(labels=MonthLabels) + scale_fill_brewer(palette = "Spectral") + scale_y_continuous(breaks = custombreaks1, labels = every_nth(custombreaks1, 2, inverse=TRUE)) 
 
 ggsave(paste(PLOT,".png",sep=""), width = PlotWidth, height = PlotHeight)
