@@ -56,6 +56,7 @@ every_nth <- function(x, nth, empty = TRUE, inverse = FALSE)
 }
 
 ##################################################################
+
 #QUESTION 1
 
 #add cloud fraction number column based on cloud descriptions
@@ -68,11 +69,13 @@ KalCloud <- Kal %>%
       summarize(n=n()) %>%
       mutate(freq = n / sum(n))
 
+#exported csv
 write.csv(KalCloud, "KalCloud.csv")
       
 #imported df of monthly freq
 KalCloud_Mo <- read.csv("C:/Users/sears/Documents/4_Classes_FA20/WR 574/Assignments/Assignment 3/KalCloud_Month.csv")
 
+#group by month and get avg month cloud fraction
 KalCloud_MoAvg <- Kal %>%
   mutate(month= month(date.time)) %>%
   group_by(month) %>%
@@ -92,16 +95,21 @@ ggplot() + geom_col(data = KalCloud_Mo, aes(x=factor(month), y=freq*100, fill=fa
 ggsave(paste(PLOT,".png",sep=""), width = PlotWidth, height = PlotHeight)
 
 ###############################################################################
+
 #QUESTION 2
+
 #no trace included
 Kal_noT <- Kal[!(Kal$HourlyPrecip_in=="T"),]
 
+#set to precip occurring or not
 Kal_PrecipFreq <- Kal_noT %>%
   mutate(Precip_Y_N =  case_when(
     HourlyPrecip_in == 0 ~ "No Precip"))
 
+#shitty way to say precip is occurring, got lazy
 Kal_PrecipFreq[is.na(Kal_PrecipFreq)] = "Precip"
 
+#get freq of precip occurring
 KalPrecipFreq_Mo <- Kal_PrecipFreq %>%
   mutate(month = month(date.time)) %>%
   group_by(month, Precip_Y_N) %>%
@@ -111,18 +119,22 @@ KalPrecipFreq_Mo <- Kal_PrecipFreq %>%
 #trace included
 Kal_Tfix <- read.csv("C:/Users/sears/Documents/4_Classes_FA20/WR 574/Assignments/Assignment 3/Kal_T.csv")
 
+#precip occurring or not
 Kal_PrecipFreq_T <- Kal_T %>%
   mutate(Precip_Y_N =  case_when(
     HourlyPrecip_in == 0 ~ "No Precip"))
 
+#again, shitty way to say precip is occurring
 Kal_PrecipFreq_T[is.na(Kal_PrecipFreq_T)] = "Precip"
 
+#get freq of precip occurring
 KalPrecipFreqT_Mo <- Kal_PrecipFreq_T %>%
   mutate(month = month(date.time)) %>%
   group_by(month, Precip_Y_N) %>%
   summarize(n=n()) %>%
   mutate(freq = n / sum(n))
 
+#filter for precip for trace and no trace
 KalPrecip_noT <- KalPrecipFreq_Mo %>%
   filter(Precip_Y_N == "Precip")
 
@@ -135,6 +147,7 @@ KalPrecip_noT <- KalPrecip_noT %>%
 KalPrecip_T <- KalPrecip_T %>%
   mutate(newcol = "Precip w/ trace")
 
+#combine two df of precip trace and no trace
 KalPrecip <- bind_rows(KalPrecip_T, KalPrecip_noT)
 
 #factor so months are in correct order - THIS IS FOR GGPLOT SO IT DOESN'T MIX UP THE MONTHS 
@@ -147,8 +160,10 @@ ggplot() + geom_col(data = KalPrecip, aes(x=factor(month), y=freq*100, fill=newc
 ggsave(paste(PLOT,".png",sep=""), width = PlotWidth, height = PlotHeight)
 
 #################################################
+
 #QUESTION 4
 
+#df that includes ALL CLOUD DECKS
 Clouds <- read.csv("C:/Users/sears/Documents/4_Classes_FA20/WR 574/Assignments/Assignment 3/CloudDecks.csv")%>%
   mutate(date.time = mdy_hm(date.time))
 
@@ -158,6 +173,7 @@ Clouds <- Clouds %>%
 Clouds <- Clouds %>% 
   filter_all(any_vars(complete.cases(.)))  
 
+#average the cloud decks together to get cloud frac for all decks
 Clouds$Mean <- rowMeans(Clouds[,6:8], na.rm=TRUE)
 
 #add cloud fraction number column based on cloud descriptions
@@ -165,6 +181,7 @@ Clouds$CloudFrac1 <- recode(Clouds$skyc1, "BKN" = 6/8, "CLR" = 0/8, "FEW" = 1/8,
 Clouds$CloudFrac2 <- recode(Clouds$skyc2, "BKN" = 6/8, "CLR" = 0/8, "FEW" = 1/8, "OVC" = 8/8, "SCT" = 3.5/8)
 Clouds$CloudFrac3 <- recode(Clouds$skyc3, "BKN" = 6/8, "CLR" = 0/8, "FEW" = 1/8, "OVC" = 8/8, "SCT" = 3.5/8)
 
+#get cloud cover type based on cloud frac ranges
 Clouds <- Clouds %>%
   mutate(CloudTyp = case_when(
     between(Mean, 0, 0.0001) ~ "CLR",
@@ -177,9 +194,10 @@ Clouds <- Clouds %>%
 Clouds <- Clouds %>% 
   filter(!is.na(Mean))
 
+#got frustrated
 write.csv(Clouds, "Clouds_fix.csv")
   
-
+#get mean cloud type by month and determine freq
 Clouds_Mean <- Clouds %>%
   mutate(month = month(date.time)) %>%
   group_by(month, CloudTyp) %>%
@@ -212,16 +230,17 @@ ggsave(paste(PLOT,".png",sep=""), width = PlotWidth, height = PlotHeight)
 CloudTemp <- read.csv("C:/Users/sears/Documents/4_Classes_FA20/WR 574/Assignments/Assignment 3/CloudTemp.csv")%>%
   mutate(date.time = mdy_hm(date.time))
 
-
+#determine crystal type by range of cloud temps
 CloudTemp <- CloudTemp %>%
   mutate(CrystalTyp = case_when(
-    between(CloudTemp_C, -35, -21) ~ "Columns",
+    between(CloudTemp_C, -35, -21) ~ "Columns & Plates",
     between(CloudTemp_C, -21, -10) ~ "Plates",
-    between(CloudTemp_C, -10, -4) ~ "Needles",
+    between(CloudTemp_C, -10, -4) ~ "Columns",
     between(CloudTemp_C, -4, 0) ~ "Plates",
     between(CloudTemp_C, 0, 100) ~ "Rain")
   )
 
+#get freq of crystal type or rain occurring
 CrystalTyp <- CloudTemp %>%
   mutate(month = month(date.time)) %>%
   group_by(month, CrystalTyp) %>%
@@ -229,7 +248,7 @@ CrystalTyp <- CloudTemp %>%
   mutate(freq = n / sum(n))
 
 #factor so cloud type are in order below (least to greatest CC)
-CrystalTyp$CrystalTyp <- factor(CrystalTyp$CrystalTyp, levels=c("Rain", "Plates", "Needles", "Columns"))
+CrystalTyp$CrystalTyp <- factor(CrystalTyp$CrystalTyp, levels=c("Rain", "Plates", "Columns", "Columns & Plates"))
 
 #factor so months are in correct order - THIS IS FOR GGPLOT SO IT DOESN'T MIX UP THE MONTHS 
 CrystalTyp$month <- factor(CrystalTyp$month, levels=c(9, 10, 11, 12, 1, 2, 3, 4, 5, 6, 7, 8))
