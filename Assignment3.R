@@ -137,6 +137,9 @@ KalPrecip_T <- KalPrecip_T %>%
 
 KalPrecip <- bind_rows(KalPrecip_T, KalPrecip_noT)
 
+#factor so months are in correct order - THIS IS FOR GGPLOT SO IT DOESN'T MIX UP THE MONTHS 
+KalPrecip$month <- factor(KalPrecip$month, levels=c(9, 10, 11, 12, 1, 2, 3, 4, 5, 6, 7, 8))
+
 PLOT = "Precip Freq"
 custombreaks1 <- seq(0,100, 5)
 ggplot() + geom_col(data = KalPrecip, aes(x=factor(month), y=freq*100, fill=newcol), position="dodge2") + theme_classic() + PlotTheme + labs(x="Month", y="Precip Frequency (%)") + scale_x_discrete(labels=MonthLabels) + scale_fill_brewer(palette = "Dark2") + scale_y_continuous(breaks = custombreaks1, labels = every_nth(custombreaks1, 2, inverse=TRUE)) 
@@ -186,6 +189,9 @@ Clouds_Mean <- Clouds %>%
 #factor so cloud type are in order below (least to greatest CC)
 Clouds_Mean$CloudTyp <- factor(Clouds_Mean$CloudTyp, levels=c("CLR", "FEW", "SCT", "BKN", "OVC"))
 
+#factor so months are in correct order - THIS IS FOR GGPLOT SO IT DOESN'T MIX UP THE MONTHS 
+Clouds_Mean$month <- factor(Clouds_Mean$month, levels=c(9, 10, 11, 12, 1, 2, 3, 4, 5, 6, 7, 8))
+
 #CC freq col plot FOR ALL CLOUD DECKS
 PLOT = "Cloud Cov Freq - ALL DECKS"
 custombreaks1 <- seq(0,100, 5)
@@ -202,3 +208,35 @@ ggsave(paste(PLOT,".png",sep=""), width = PlotWidth, height = PlotHeight)
 
 #####################################################################################
 #question 5
+
+CloudTemp <- read.csv("C:/Users/sears/Documents/4_Classes_FA20/WR 574/Assignments/Assignment 3/CloudTemp.csv")%>%
+  mutate(date.time = mdy_hm(date.time))
+
+
+CloudTemp <- CloudTemp %>%
+  mutate(CrystalTyp = case_when(
+    between(CloudTemp_C, -35, -21) ~ "Columns",
+    between(CloudTemp_C, -21, -10) ~ "Plates",
+    between(CloudTemp_C, -10, -4) ~ "Needles",
+    between(CloudTemp_C, -4, 0) ~ "Plates",
+    between(CloudTemp_C, 0, 100) ~ "Rain")
+  )
+
+CrystalTyp <- CloudTemp %>%
+  mutate(month = month(date.time)) %>%
+  group_by(month, CrystalTyp) %>%
+  summarize(n=n()) %>%
+  mutate(freq = n / sum(n))
+
+#factor so cloud type are in order below (least to greatest CC)
+CrystalTyp$CrystalTyp <- factor(CrystalTyp$CrystalTyp, levels=c("Rain", "Plates", "Needles", "Columns"))
+
+#factor so months are in correct order - THIS IS FOR GGPLOT SO IT DOESN'T MIX UP THE MONTHS 
+CrystalTyp$month <- factor(CrystalTyp$month, levels=c(9, 10, 11, 12, 1, 2, 3, 4, 5, 6, 7, 8))
+
+## CC freq for lower deck
+PLOT = "Crystal Freq"
+custombreaks1 <- seq(0,100, 5)
+ggplot() + geom_col(data = CrystalTyp, aes(x=factor(month), y=freq*100, fill=factor(CrystalTyp))) + theme_classic() + PlotTheme + labs(x="Month", y="Cloud Cover Frequency (%)") + scale_x_discrete(labels=MonthLabels) + scale_fill_brewer(palette = "Dark2") + scale_y_continuous(breaks = custombreaks1, labels = every_nth(custombreaks1, 2, inverse=TRUE)) 
+
+ggsave(paste(PLOT,".png",sep=""), width = PlotWidth, height = PlotHeight)
