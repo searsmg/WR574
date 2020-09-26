@@ -8,10 +8,10 @@ library(lubridate)
 library(RColorBrewer)
 
 #set wd for saving plots
-setwd("C:/Users/sears/Documents/4_Classes_FA20/WR 574/Assignments/Assignment 3/")
+setwd("C:/Users/sears/Documents/4_Classes_FA20/WR 574/Assignments/Assignment 3/Code_Test/")
 
 #Kalispell ASOS station hourly data. Mutate date to work with in R 
-Kal <- read.csv("C:/Users/sears/Documents/4_Classes_FA20/WR 574/Assignments/Assignment 3/Assignment3_KalASOS.csv", na.rm=TRUE)%>%
+Kal <- read.csv("C:/Users/sears/Documents/4_Classes_FA20/WR 574/Assignments/Assignment 3/Assignment3_KalASOS.csv")%>%
       mutate(date.time = mdy_hm(date.time))
 
 Kal <-na.omit(Kal)
@@ -118,10 +118,11 @@ KalPrecipFreq_Mo <- Kal_PrecipFreq %>%
   mutate(freq = n / sum(n))
 
 #trace included
-Kal_Tfix <- read.csv("C:/Users/sears/Documents/4_Classes_FA20/WR 574/Assignments/Assignment 3/Kal_T.csv")
+Kal_Tfix <- read.csv("C:/Users/sears/Documents/4_Classes_FA20/WR 574/Assignments/Assignment 3/Kal_T.csv")%>%
+  mutate(date.time = mdy_hm(date.time))
 
 #precip occurring or not
-Kal_PrecipFreq_T <- Kal_T %>%
+Kal_PrecipFreq_T <- Kal_Tfix %>%
   mutate(Precip_Y_N =  case_when(
     HourlyPrecip_in == 0 ~ "No Precip"))
 
@@ -174,6 +175,7 @@ Clouds <- Clouds %>%
 Clouds <- Clouds %>% 
   filter_all(any_vars(complete.cases(.)))  
 
+#############STOP AND RUN THIS LINE BY ITSELF
 #average the cloud decks together to get cloud frac for all decks
 Clouds$Mean <- rowMeans(Clouds[,6:8], na.rm=TRUE)
 
