@@ -66,5 +66,6 @@ every_nth <- function(x, nth, empty = TRUE, inverse = FALSE)
 #Question 1 - cum sum of precip w/o trace and w/trace
 
 #cumsum WITHOUT TRACE
-
+Kal_noT <- Kal_noT %>%
+  mutate(precip_cumsum)
 
