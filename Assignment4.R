@@ -6,6 +6,7 @@ library(ggplot2)
 library(dplyr)
 library(lubridate)
 library(RColorBrewer)
+library(scales)
 
 #set wd for saving plots
 setwd("C:/Users/sears/Documents/4_Classes_FA20/WR 574/Assignments/Assignment 4/")
@@ -66,6 +67,23 @@ every_nth <- function(x, nth, empty = TRUE, inverse = FALSE)
 #Question 1 - cum sum of precip w/o trace and w/trace
 
 #cumsum WITHOUT TRACE
-Kal_noT <- Kal_noT %>%
-  mutate(precip_cumsum)
+Kal_noT$HourlyPrecip_in <- as.numeric(as.character(Kal_noT$HourlyPrecip_in))
+Kal_noT$Precip_mm <- Kal_noT$HourlyPrecip_in * 25.4
 
+Kal_noT <- Kal_noT %>%
+  mutate(precip_cum_mm = cumsum(Precip_mm))
+
+#cumsum WITH TRACE
+Kal_T <- Kal_T %>% 
+  mutate(HourlyPrecip_in = ifelse(HourlyPrecip_in == 0.001, 0.005, HourlyPrecip_in))
+
+Kal_T$Precip_mm <- Kal_T$HourlyPrecip_in *25.4
+
+Kal_T <- Kal_T %>% 
+  mutate(precip_cum_mm = cumsum(Precip_mm))
+
+PLOT = "Cum Precip with Trace and without"
+custombreaks1 <- seq(0, 800, 100)
+ggplot() + geom_line(data = Kal_noT, aes(x=date.time, y=precip_cum_mm), size=1) + theme_classic() + geom_line(data= Kal_T, aes(x=date.time, y=precip_cum_mm), colour="blue", size=1) + PlotTheme + labs(x="Water Year 2020", y="Cumulative Hourly Precipitation (mm)") + scale_y_continuous(breaks = custombreaks1, labels = every_nth(custombreaks1, 2, inverse=TRUE)) + scale_x_datetime(date_breaks = "1 month", labels = date_format("%b"))
+
+ggsave(paste(PLOT,".png",sep=""), width = PlotWidth, height = PlotHeight)
