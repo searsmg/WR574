@@ -111,7 +111,7 @@ Kal_T <- Kal_T %>%
 
 PLOT = "Cum Precip with CRF and without"
 custombreaks1 <- seq(0, 1000, 100)
-ggplot() + geom_line(data = Kal_T, aes(x=date.time, y=precip_cum_mm, colour="Not corrected"), size=1) + theme_classic() + geom_line(data= Kal_T, aes(x=date.time, y=PrecipCorr_cumsum, colour="Corrected"), size=1) + PlotTheme + labs(x="Water Year 2020", y="Cumulative Hourly Precipitation (mm)") + scale_y_continuous(breaks = custombreaks1, labels = every_nth(custombreaks1, 2, inverse=TRUE)) + scale_x_datetime(date_breaks = "1 month", labels = date_format("%b")) + scale_color_manual(values = c("Not corrected"= "blue", "Corrected" = "grey45"))
+ggplot() + geom_line(data = Kal_T, aes(x=date.time, y=precip_cum_mm, colour="Not corrected"), size=1) + theme_classic() + geom_line(data= Kal_T, aes(x=date.time, y=PrecipCorr_cumsum, colour="Corrected"), size=1) + PlotTheme + labs(x="Water Year 2020", y="Cumulative Hourly Precipitation (mm)") + scale_y_continuous(breaks = custombreaks1, labels = every_nth(custombreaks1, 2, inverse=TRUE)) + scale_x_datetime(date_breaks = "1 month", labels = date_format("%b")) + scale_color_manual(values = c("Not corrected"= "blue", "Corrected" = "green"))
 
 ggsave(paste(PLOT,".png",sep=""), width = PlotWidth, height = PlotHeight)
 
@@ -122,7 +122,7 @@ Kal_T$DewPtTemp_F <- as.numeric(as.character(Kal_T$DewPtTemp_F))
 Kal_T$DewTemp_C <- (Kal_T$DewPtTemp_F - 32) * (5/9)
 
 Kal_Correct <- Kal_T %>% 
-  select(date.time, AirTemp_C, DewTemp_C, PrecipCorr, PrecipCorr_cumsum )
+  select(date.time, AirTemp_C, DewTemp_C, PrecipCorr, PrecipCorr_cumsum, Wind_ms)
 
 #Cum sum precip for snow using 0 deg AIR TEMP threshold (3i)
 Kal_Correct <- Kal_Correct %>% 
@@ -142,10 +142,50 @@ Kal_Correct <- Kal_Correct %>%
   
 PLOT = "Precip as Snow"
 custombreaks2 <- seq(0, 400, 50)
-ggplot(Kal_Correct) + geom_line(aes(x=date.time, y=Precip_Snow_AirCum, colour="Snow based on air temp"), size=1) + theme_classic() + geom_line(aes(x=date.time, y=Precip_Snow_DewCum, colour="Snow based on dew temp"), size=1) + geom_line(aes(x=date.time, y=Precip_Snow_ProbCum, colour="Snow based on probability"), size =1) + PlotTheme + labs(x="Water Year 2020", y="Cumulative Hourly Snow (mm)") + scale_y_continuous(breaks = custombreaks2, labels = every_nth(custombreaks2, 2, inverse=TRUE)) + scale_x_datetime(date_breaks = "1 month", labels = date_format("%b")) + scale_color_manual(values = c("Snow based on air temp"= "purple", "Snow based on dew temp" = "blue", "Snow based on probability" = "green"))
+ggplot(Kal_Correct) + geom_line(aes(x=date.time, y=Precip_Snow_AirCum, colour="Snow based on air temp"), size=1) + theme_classic() + geom_line(aes(x=date.time, y=Precip_Snow_DewCum, colour="Snow based on dew temp"), size=1) + geom_line(aes(x=date.time, y=Precip_Snow_ProbCum, colour="Snow based on probability"), size =1) + PlotTheme + labs(x="Water Year 2020", y="Cumulative Hourly Snow (mm)") + scale_y_continuous(breaks = custombreaks2, labels = every_nth(custombreaks2, 2, inverse=TRUE)) + scale_x_datetime(date_breaks = "1 month", labels = date_format("%b")) + scale_color_manual(values = c("Snow based on air temp"= "purple", "Snow based on dew temp" = "blue", "Snow based on probability" = "orange"))
 
 ggsave(paste(PLOT,".png",sep=""), width = PlotWidth, height = PlotHeight)
 
 #####################################################################
+#Question 4 - wind during precip events
 
+Kal_WindPrecip <- Kal_Correct %>%
+  select(date.time, AirTemp_C, PrecipCorr, Wind_ms) %>%
+  mutate(Precip_Snow = ifelse(AirTemp_C <= 0, PrecipCorr, 0)) %>%
+  mutate(Precip_Rain = ifelse(AirTemp_C > 0, PrecipCorr, 0)) %>%
+  mutate(month = month(date.time))
+  
+#no precip
+KalWind_NoPrecip <- Kal_WindPrecip %>%
+  filter(PrecipCorr == 0)
+ 
+KalWind_NoPrecip <- KalWind_NoPrecip %>%
+  group_by(month) %>%
+  summarize(WindMean = mean(Wind_ms))
 
+#snow
+KalWind_Snow <- Kal_WindPrecip %>%
+  filter(Precip_Snow > 0) 
+  
+KalWind_Snow <- KalWind_Snow %>%
+  group_by(month) %>%
+  summarize(WindMean = mean(Wind_ms))
+
+#rain
+KalWind_Rain <- Kal_WindPrecip %>%
+  filter(Precip_Rain > 0) 
+
+KalWind_Rain <- KalWind_Rain %>%
+  group_by(month) %>%
+  summarize(WindMean = mean(Wind_ms))
+
+#factor so months are in correct order - THIS IS FOR GGPLOT SO IT DOESN'T MIX UP THE MONTHS 
+KalWind_NoPrecip$month <- factor(KalWind_NoPrecip$month, levels=c(9, 10, 11, 12, 1, 2, 3, 4, 5, 6, 7, 8))
+KalWind_Snow$month <- factor(KalWind_Snow$month, levels=c(10,11,12,1,2,3,4))
+KalWind_Rain$month <- factor(KalWind_Rain$month, levels=c(9, 10, 11, 12, 1, 2, 3, 4, 5, 6, 7, 8))
+
+PLOT = "Mean Wind Speed"
+custombreaks3 <- seq(0, 12, 1)
+ggplot()+ geom_line(data=KalWind_NoPrecip, aes(x=month, y=WindMean, colour="No Precip"), size=1, group=1) + geom_line(data=KalWind_Snow, aes(x=month, y=WindMean, colour="Snow"), size=1, group=1) + geom_line(data=KalWind_Rain, aes(x=month, y=WindMean, colour="Rain"), size=1, group=1) + theme_classic() + PlotTheme + labs(x="Water Year 2020", y="Mean Wind Speed (m/s)") + scale_y_continuous(breaks = custombreaks3, labels = every_nth(custombreaks3, 2, inverse=TRUE)) + scale_x_discrete(labels=MonthLabels) + scale_color_manual(values = c("No Precip"= "purple", "Snow" = "blue", "Rain" = "orange"))
+
+ggsave(paste(PLOT,".png",sep=""), width = PlotWidth, height = PlotHeight)
