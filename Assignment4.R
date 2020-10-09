@@ -79,7 +79,7 @@ Kal_T <- Kal_T %>%
 
 PLOT = "Cum Precip with Trace and without"
 custombreaks1 <- seq(0, 800, 100)
-ggplot() + geom_line(data = Kal_noT, aes(x=date.time, y=precip_cum_mm), size=1) + theme_classic() + geom_line(data= Kal_T, aes(x=date.time, y=precip_cum_mm), colour="blue", size=1) + PlotTheme + labs(x="Water Year 2020", y="Cumulative Hourly Precipitation (mm)") + scale_y_continuous(breaks = custombreaks1, labels = every_nth(custombreaks1, 2, inverse=TRUE)) + scale_x_datetime(date_breaks = "1 month", labels = date_format("%b"))
+ggplot() + geom_line(data = Kal_noT, aes(x=date.time, y=precip_cum_mm, colour="No trace included"), size=1) + theme_classic() + geom_line(data= Kal_T, aes(x=date.time, y=precip_cum_mm, colour="Trace included"), size=1) + PlotTheme + labs(x="Water Year 2020", y="Cumulative Hourly Precipitation (mm)") + scale_y_continuous(breaks = custombreaks1, labels = every_nth(custombreaks1, 2, inverse=TRUE)) + scale_x_datetime(date_breaks = "1 month", labels = date_format("%b")) + scale_color_manual(values = c("No trace included"= "black", "Trace included" = "blue"))
 
 ggsave(paste(PLOT,".png",sep=""), width = PlotWidth, height = PlotHeight)
 
@@ -96,10 +96,24 @@ Kal_T <- Kal_T %>%
   )
 
 Kal_T$WindSp_knots <- as.numeric(as.character(Kal_T$WindSp_knots))
+Kal_T$WindSp_knots[is.na(Kal_T$WindSp_knots)] <- 0
 Kal_T$Wind_ms <- Kal_T$WindSp_knots/1.944
 
-Kal_T <- Kal_T %>% 
-  mutate(Precip_Corr = ifelse(PrecipType == "Snow", exp(-0.04*Wind_ms^1.75),
-                              PrecipType == "Mixed", 1.0104-(0.0562*Wind_ms)),
-                              PrecipType == "Rain", Precip_mm))
 
+Kal_T <- Kal_T %>%
+  mutate(Uz = ifelse(Wind_ms > 6.5, 6.5, Wind_ms)) %>% 
+  mutate(CRF = ifelse(
+    PrecipType == "Snow", exp(-0.04*Uz^1.75),
+    ifelse(PrecipType == "Mixed", 1.0104-(0.0562*Uz),
+    1))) %>% 
+  mutate(PrecipCorr = Precip_mm/CRF) %>% 
+  mutate(PrecipCorr_cumsum = cumsum(PrecipCorr))
+
+PLOT = "Cum Precip with CRF and without"
+custombreaks1 <- seq(0, 1000, 100)
+ggplot() + geom_line(data = Kal_T, aes(x=date.time, y=precip_cum_mm, colour="Not corrected"), size=1) + theme_classic() + geom_line(data= Kal_T, aes(x=date.time, y=PrecipCorr_cumsum, colour="Corrected"), size=1) + PlotTheme + labs(x="Water Year 2020", y="Cumulative Hourly Precipitation (mm)") + scale_y_continuous(breaks = custombreaks1, labels = every_nth(custombreaks1, 2, inverse=TRUE)) + scale_x_datetime(date_breaks = "1 month", labels = date_format("%b")) + scale_color_manual(values = c("Not corrected"= "blue", "Corrected" = "grey45"))
+
+ggsave(paste(PLOT,".png",sep=""), width = PlotWidth, height = PlotHeight)
+
+###############################################################
+#Question 3 - 
