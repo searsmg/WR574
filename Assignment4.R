@@ -78,8 +78,8 @@ Kal_T <- Kal_T %>%
   mutate(precip_cum_mm = cumsum(Precip_mm))
 
 PLOT = "Cum Precip with Trace and without"
-custombreaks1 <- seq(0, 800, 100)
-ggplot() + geom_line(data = Kal_noT, aes(x=date.time, y=precip_cum_mm, colour="No trace included"), size=1) + theme_classic() + geom_line(data= Kal_T, aes(x=date.time, y=precip_cum_mm, colour="Trace included"), size=1) + PlotTheme + labs(x="Water Year 2020", y="Cumulative Hourly Precipitation (mm)") + scale_y_continuous(breaks = custombreaks1, labels = every_nth(custombreaks1, 2, inverse=TRUE)) + scale_x_datetime(date_breaks = "1 month", labels = date_format("%b")) + scale_color_manual(values = c("No trace included"= "black", "Trace included" = "blue"))
+custombreaks <- seq(0, 800, 100)
+ggplot() + geom_line(data = Kal_noT, aes(x=date.time, y=precip_cum_mm, colour="No trace included"), size=1) + theme_classic() + geom_line(data= Kal_T, aes(x=date.time, y=precip_cum_mm, colour="Trace included"), size=1) + PlotTheme + labs(x="Water Year 2020", y="Cumulative Hourly Precipitation (mm)") + scale_y_continuous(breaks = custombreaks, labels = every_nth(custombreaks1, 2, inverse=TRUE)) + scale_x_datetime(date_breaks = "1 month", labels = date_format("%b")) + scale_color_manual(values = c("No trace included"= "black", "Trace included" = "blue"))
 
 ggsave(paste(PLOT,".png",sep=""), width = PlotWidth, height = PlotHeight)
 
@@ -116,4 +116,36 @@ ggplot() + geom_line(data = Kal_T, aes(x=date.time, y=precip_cum_mm, colour="Not
 ggsave(paste(PLOT,".png",sep=""), width = PlotWidth, height = PlotHeight)
 
 ###############################################################
-#Question 3 - 
+#Question 3 - Precip as snow
+
+Kal_T$DewPtTemp_F <- as.numeric(as.character(Kal_T$DewPtTemp_F))
+Kal_T$DewTemp_C <- (Kal_T$DewPtTemp_F - 32) * (5/9)
+
+Kal_Correct <- Kal_T %>% 
+  select(date.time, AirTemp_C, DewTemp_C, PrecipCorr, PrecipCorr_cumsum )
+
+#Cum sum precip for snow using 0 deg AIR TEMP threshold (3i)
+Kal_Correct <- Kal_Correct %>% 
+  mutate(Precip_Snow_Air = ifelse(AirTemp_C <= 0, PrecipCorr, 0)) %>% 
+  mutate(Precip_Snow_AirCum = cumsum(Precip_Snow_Air))
+
+#Cum sum precip for snow using 0 deg threshold of DEW PT TEMP (3ii)
+Kal_Correct <- Kal_Correct %>% 
+  mutate(Precip_Snow_Dew = ifelse(DewTemp_C <= 0, PrecipCorr, 0)) %>% 
+  filter_if(is.numeric, all_vars(!is.na(.))) %>% 
+  mutate(Precip_Snow_DewCum = cumsum(Precip_Snow_Dew))
+
+Kal_Correct <- Kal_Correct %>%
+  mutate(snowprob = ifelse(AirTemp_C < 9.64, ifelse(AirTemp_C > -2.31, -0.0837*AirTemp_C+0.807,1),0)) %>%
+  mutate(Precip_Snow_Prob = snowprob * PrecipCorr) %>% 
+  mutate(Precip_Snow_ProbCum = cumsum(Precip_Snow_Prob))
+  
+PLOT = "Precip as Snow"
+custombreaks2 <- seq(0, 400, 50)
+ggplot(Kal_Correct) + geom_line(aes(x=date.time, y=Precip_Snow_AirCum, colour="Snow based on air temp"), size=1) + theme_classic() + geom_line(aes(x=date.time, y=Precip_Snow_DewCum, colour="Snow based on dew temp"), size=1) + geom_line(aes(x=date.time, y=Precip_Snow_ProbCum, colour="Snow based on probability"), size =1) + PlotTheme + labs(x="Water Year 2020", y="Cumulative Hourly Snow (mm)") + scale_y_continuous(breaks = custombreaks2, labels = every_nth(custombreaks2, 2, inverse=TRUE)) + scale_x_datetime(date_breaks = "1 month", labels = date_format("%b")) + scale_color_manual(values = c("Snow based on air temp"= "purple", "Snow based on dew temp" = "blue", "Snow based on probability" = "green"))
+
+ggsave(paste(PLOT,".png",sep=""), width = PlotWidth, height = PlotHeight)
+
+#####################################################################
+
+
