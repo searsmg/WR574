@@ -189,3 +189,4 @@ custombreaks3 <- seq(0, 12, 1)
 ggplot()+ geom_line(data=KalWind_NoPrecip, aes(x=month, y=WindMean, colour="No Precip"), size=1, group=1) + geom_line(data=KalWind_Snow, aes(x=month, y=WindMean, colour="Snow"), size=1, group=1) + geom_line(data=KalWind_Rain, aes(x=month, y=WindMean, colour="Rain"), size=1, group=1) + theme_classic() + PlotTheme + labs(x="Water Year 2020", y="Mean Wind Speed (m/s)") + scale_y_continuous(breaks = custombreaks3, labels = every_nth(custombreaks3, 2, inverse=TRUE)) + scale_x_discrete(labels=MonthLabels) + scale_color_manual(values = c("No Precip"= "purple", "Snow" = "blue", "Rain" = "orange"))
 
 ggsave(paste(PLOT,".png",sep=""), width = PlotWidth, height = PlotHeight)
+
