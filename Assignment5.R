@@ -15,7 +15,7 @@ load("~/Repos/WR574/Kal_Correct.RData")
 SNOTEL <- read.csv("C:/Users/sears/Documents/4_Classes_FA20/WR 574/Assignments/Assignment 5/SNOTEL_daily.csv")%>%
   mutate(Date = mdy(Date))
 
-SNOTEL$Date <- as.POSIXct(SNOTEL$Date)
+#SNOTEL$Date <- as.POSIXct(SNOTEL$Date)
 
 #################################################################
 
@@ -110,3 +110,14 @@ ggplot(Kal_MonthlyDens) + geom_line(aes(x=month, y=MoAvgDens), group=1, size=1) 
 ggsave(paste(PLOT,".png",sep=""), width = PlotWidth, height = PlotHeight)
 
 ###################################################################################
+#Question 2ii - this is just the cumulative hourly precip as snow
+
+PLOT = "Cumulative Hourly Snowfall"
+custombreaks3 <- seq(0, 400, 50)
+ggplot(Kal_Correct) + theme_classic() + geom_line(aes(x=date.time, y=Precip_Snow_DewCum), size=1) + PlotTheme + labs(x="Date", y="Cumulative Hourly Snowfall (mm)") + scale_y_continuous(breaks = custombreaks3, labels = every_nth(custombreaks3, 2, inverse=TRUE)) + scale_x_datetime(date_breaks = "2 month", labels = date_format("%b %Y")) 
+
+ggsave(paste(PLOT,".png",sep=""), width = PlotWidth, height = PlotHeight)
+
+###################################################################################
+
+
