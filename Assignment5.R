@@ -90,6 +90,23 @@ ggsave(paste(PLOT,".png",sep=""), width = PlotWidth, height = PlotHeight)
 
 
 #######################################################################
-#Question 2
+#Question 2i
 
+Kal_Correct <- Kal_Correct %>%
+  mutate(SnowDens = ifelse(Precip_Snow_Dew > 0,67.92+(51.25*exp(AirTemp_C/2.59)), NA)) %>% 
+  mutate(SnowDensFix = ifelse(SnowDens > 700,NA, SnowDens))
 
+Kal_MonthlyDens <- Kal_Correct %>%
+  mutate(month = month(date.time)) %>% 
+  group_by(month) %>%
+  summarize(MoAvgDens = mean(SnowDensFix, na.rm=TRUE))
+
+Kal_MonthlyDens$month <- factor(Kal_MonthlyDens$month, levels=c(9, 10, 11, 12, 1, 2, 3, 4, 5, 6, 7, 8))
+
+PLOT = "Fresh Snow Dens - Q2i"
+custombreaks2 <- seq(0,200,20)
+ggplot(Kal_MonthlyDens) + geom_line(aes(x=month, y=MoAvgDens), group=1, size=1) + labs(x="Water Year 2020", y="Monthly Average Fresh Snow Density (kg/m^3)") + theme_classic() + PlotTheme + scale_x_discrete(labels=MonthLabels) + scale_y_continuous(breaks = custombreaks2, labels = every_nth(custombreaks2, 2, inverse=TRUE))
+
+ggsave(paste(PLOT,".png",sep=""), width = PlotWidth, height = PlotHeight)
+
+###################################################################################
