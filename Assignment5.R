@@ -7,6 +7,7 @@ library(RColorBrewer)
 library(scales)
 library(plotly)
 
+
 #set wd for saving plots
 setwd("C:/Users/sears/Documents/4_Classes_FA20/WR 574/Assignments/Assignment 5/")
 
@@ -119,5 +120,16 @@ ggplot(Kal_Correct) + theme_classic() + geom_line(aes(x=date.time, y=Precip_Snow
 ggsave(paste(PLOT,".png",sep=""), width = PlotWidth, height = PlotHeight)
 
 ###################################################################################
+#Question 4
 
+
+#####################################################################################
+#Question 5
+
+PLOT="Snow Dens and Air Temp"
+custombreaks4 <- seq(0, 700, 50)
+regress <- ggplot(SNOTEL, aes(x=AirTempAvg_C, y=FreshSnowDens)) + geom_point(size =1, group=1)+scale_y_continuous(breaks = custombreaks4, labels = every_nth(custombreaks4, 2, inverse=TRUE)) + labs(x="Air Temp (deg C)", y="Fresh Snow Density (kg/m^3") + theme_classic()+ PlotTheme + geom_smooth(method="lm", formula=y~x) + stat_poly_eq(formula = my.formula, aes(label = paste(..eq.label.., ..rr.label.., sep = "~~~")), parse = TRUE)
+
+
+ggsave(paste(PLOT,".png",sep=""), width = PlotWidth, height = PlotHeight)
 
