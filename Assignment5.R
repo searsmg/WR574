@@ -6,7 +6,7 @@ library(lubridate)
 library(RColorBrewer)
 library(scales)
 library(plotly)
-
+library(ggpubr)
 
 #set wd for saving plots
 setwd("C:/Users/sears/Documents/4_Classes_FA20/WR 574/Assignments/Assignment 5/")
@@ -131,5 +131,12 @@ custombreaks4 <- seq(0, 700, 50)
 regress <- ggplot(SNOTEL, aes(x=AirTempAvg_C, y=FreshSnowDens)) + geom_point(size =1, group=1)+scale_y_continuous(breaks = custombreaks4, labels = every_nth(custombreaks4, 2, inverse=TRUE)) + labs(x="Air Temp (deg C)", y="Fresh Snow Density (kg/m^3") + theme_classic()+ PlotTheme + geom_smooth(method="lm", formula=y~x) + stat_poly_eq(formula = my.formula, aes(label = paste(..eq.label.., ..rr.label.., sep = "~~~")), parse = TRUE)
 
 
-ggsave(paste(PLOT,".png",sep=""), width = PlotWidth, height = PlotHeight)
+ggscatter(SNOTEL, x="AirTempAvg_C", y="FreshSnowDens", color = "black", shape = 21, size = 3, 
+          add= "reg.line",
+          add.params = list(color="blue", fill = "lightgray"),
+          conf.int=TRUE,
+          cor.coef=TRUE,
+          cor.coeff.args = list(method="pearson", label.x=3, label.sep="\n"))
 
+
+SNOTEL.lm = lm(FreshSnowDens ~ AirTempAvg_C, data=SNOTEL)
