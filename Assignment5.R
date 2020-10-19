@@ -154,10 +154,10 @@ Kal_Albedo <- Kal_Albedo %>%
 
 Kal_Albedo <- Kal_Albedo %>%
   mutate(Snow_Fresh = ifelse(AirTemp_C < 0 & Precip_Snow_Dew > 0,Precip_Snow_Dew,0),
-         soil_al = 0.18,
+         soil_al = 0.2,
          fresh_al = ifelse(Snow_Fresh > 0, 0.84,NA),
          al_min = ifelse(AirTemp_C < 0, 0.7, 0.5)) %>%
-  mutate(al_min = ifelse(month %in% c(5:9), 0.18, al_min)) %>%
+  mutate(al_min = ifelse(month %in% c(5:9), 0.2, al_min)) %>%
   mutate(Snow_Cum = cumsum(Snow_Fresh)) %>%
   mutate(actual_al = ifelse(Snow_Cum == 0, soil_al, NA)) %>%
   mutate(SnowStop = ifelse(Snow_Cum == lag(Snow_Cum), 0, 1)) %>%
@@ -185,7 +185,7 @@ ggsave(paste(PLOT,".png",sep=""), width = PlotWidth, height = PlotHeight)
 
 PLOT="Snow Dens and Air Temp"
 custombreaks4 <- seq(0, 700, 50)
-regress <- ggplot(SNOTEL, aes(x=AirTempAvg_C, y=FreshSnowDens)) + geom_point(size =1, group=1)+scale_y_continuous(breaks = custombreaks4, labels = every_nth(custombreaks4, 2, inverse=TRUE)) + labs(x="Air Temp (deg C)", y="Fresh Snow Density (kg/m^3") + theme_classic()+ PlotTheme + geom_smooth(method="lm", formula=y~x) + stat_poly_eq(formula = my.formula, aes(label = paste(..eq.label.., ..rr.label.., sep = "~~~")), parse = TRUE)
+regress <- ggplot(SNOTEL, aes(x=AirTempAvg_C, y=FreshSnowDens)) + geom_point(size =1, group=1)+scale_y_continuous(breaks = custombreaks4, labels = every_nth(custombreaks4, 2, inverse=TRUE)) + labs(x="Avg Air Temp (deg C)", y="Fresh Snow Density (kg/m^3") + theme_classic()+ PlotTheme + geom_smooth(method="lm", formula=y~x) + stat_poly_eq(formula = my.formula, aes(label = paste(..eq.label.., ..rr.label.., sep = "~~~")), parse = TRUE)
 
 
 ggscatter(SNOTEL, x="AirTempAvg_C", y="FreshSnowDens", color = "black", shape = 21, size = 3, 
