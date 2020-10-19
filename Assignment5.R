@@ -156,7 +156,40 @@ ggplot(Kal_SnowDepth) + theme_classic() + geom_line(aes(x=date.time, y=SnowD_Cum
 ggsave(paste(PLOT,".png",sep=""), width = PlotWidth, height = PlotHeight)
 
 ###################################################################################
-#Question 4
+#Question 4 - ALBEDO MONSTER
+
+Kal_Albedo <- Kal_Correct %>%
+  select(date.time, AirTemp_C, Precip_Snow_Dew)
+
+Kal_Albedo <- Kal_Albedo %>%
+  mutate(month = month(date.time))
+
+Kal_Albedo <- Kal_Albedo %>%
+  mutate(Snow_Fresh = ifelse(AirTemp_C < 0 & Precip_Snow_Dew > 0,Precip_Snow_Dew,0),
+         soil_al = 0.18,
+         fresh_al = ifelse(Snow_Fresh > 0, 0.84,NA),
+         al_min = ifelse(AirTemp_C < 0, 0.7, 0.5)) %>%
+  mutate(al_min = ifelse(month %in% c(5:9), 0.18, al_min)) %>%
+  mutate(Snow_Cum = cumsum(Snow_Fresh)) %>%
+  mutate(actual_al = ifelse(Snow_Cum == 0, soil_al, NA)) %>%
+  mutate(SnowStop = ifelse(Snow_Cum == lag(Snow_Cum), 0, 1)) %>%
+  mutate(SnowStop = ifelse(is.na(SnowStop), 0, SnowStop)) %>%
+  mutate(actual_al = ifelse(Snow_Fresh > 0, 0.84, actual_al))
+
+albedo = Kal_Albedo$actual_al
+
+for(i in 2:nrow(Kal_Albedo)){
+  if(is.na(albedo[i])){
+    albedo[i] = ((albedo[i-1]-Kal_Albedo$al_min[i])*exp(-0.01)) + Kal_Albedo$al_min[i]
+  }
+}
+
+
+PLOT = "Albedo"
+custombreaks4<- seq(0, 0.85, 0.05)
+ggplot(Kal_Albedo) + geom_line(aes(x=date.time, y=actual_al), size=1) + labs(x="Date", y="Modeled Albedo") + theme_classic() + PlotTheme + scale_y_continuous(breaks = custombreaks4, labels = every_nth(custombreaks4, 2, inverse=TRUE)) + scale_x_datetime(date_breaks = "2 month", labels = date_format("%b %Y")) 
+
+ggsave(paste(PLOT,".png",sep=""), width = PlotWidth, height = PlotHeight)
 
 
 #####################################################################################
