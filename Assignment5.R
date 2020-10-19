@@ -62,22 +62,10 @@ every_nth <- function(x, nth, empty = TRUE, inverse = FALSE)
 #Question 1 - this is very sloppy
 
 PLOT = "Air Temp and Cumulative Snow"
-ggplot(Kal_Correct) + geom_line(aes(x=date.time, y=Precip_Snow_AirCum, colour="Snow"), size=1) + theme_classic() + geom_line(aes(x=date.time, y=AirTemp_C, colour="Temp"), size=1) + PlotTheme + labs(x="Water Year 2020", y="AirTemp (C)") + scale_x_datetime(date_breaks = "1 month", labels = date_format("%b")) + scale_color_manual(values = c("Temp"= "blue", "Snow" = "green"))
+ggplot(Kal_Correct) + geom_line(aes(x=date.time, y=SnowDepth, colour="Snow"), size=1) + theme_classic() + geom_line(aes(x=date.time, y=AirTemp_C, colour="Temp"), size=1) + PlotTheme + labs(x="Water Year 2020", y="AirTemp (C)") + scale_x_datetime(date_breaks = "1 month", labels = date_format("%b")) + scale_color_manual(values = c("Temp"= "blue", "Snow" = "green"))
 
-ay <- list(
-  tickfont = list(size=11.7),
-  titlefont=list(size=14.6),
-  overlaying = "y",
-  nticks = 5,
-  side = "right",
-  title = "Second y axis"
-)
-
-
-ggplotly(q1) %>%
-  add_lines(x=~date.time, y=~AirTemp_C, colors=NULL, yaxis="y2", 
-            data=Kal_Correct, showlegend=FALSE, inherit=FALSE) %>%
-  layout(yaxis2 = ay)
+write.csv(Kal_Correct, "q1.csv")
+ggplotly(q1)
 
 ###################################################################
 
