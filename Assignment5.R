@@ -23,7 +23,7 @@ SNOTEL <- read.csv("C:/Users/sears/Documents/4_Classes_FA20/WR 574/Assignments/A
 #plot formatting
 
 #X-axis labels for monthly plots
-MonthLabels = c("Sep", "Oct", "Nov", "Dec", "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug")
+MonthLabels = c("Sep 2019", "Oct 2019", "Nov 2019", "Dec 2019", "Jan 2020", "Feb 2020", "Mar 2020", "Apr 200", "May 2020", "Jun 2020", "Jul 2020", "Aug 2020")
 
 #Height and width 
 PlotWidth = 15
@@ -104,18 +104,54 @@ Kal_MonthlyDens <- Kal_Correct %>%
 
 Kal_MonthlyDens$month <- factor(Kal_MonthlyDens$month, levels=c(9, 10, 11, 12, 1, 2, 3, 4, 5, 6, 7, 8))
 
+#PLOT = "Fresh Snow Dens - Q2i"
+#custombreaks2 <- seq(0,200,20)
+#ggplot(Kal_MonthlyDens) + geom_line(aes(x=month, y=MoAvgDens), group=1, size=1) + labs(x="Water Year 2020", y="Monthly Average Fresh Snow Density (kg/m^3)") + theme_classic() + PlotTheme + scale_x_discrete(labels=MonthLabels) + scale_y_continuous(breaks = custombreaks2, labels = every_nth(custombreaks2, 2, inverse=TRUE))
+
+#ggsave(paste(PLOT,".png",sep=""), width = PlotWidth, height = PlotHeight)
+
+KalSnowDens <- Kal_Correct %>%
+  select(date.time, SnowDensFix)
+
+KalSnowDens <- na.omit(KalSnowDens)
+
+KalSnowDens_Mo <- KalSnowDens %>%
+  mutate(month = month(date.time)) %>%
+  group_by(month) %>%
+  summarize(MoSnoDens = mean(SnowDensFix))
+
+# DO NOT USE
+PLOT = "Fresh Snow Dens - Q2i-explore"
+custombreaks2 <- seq(0,700,20)
+ggplot(KalSnowDens) + geom_point(aes(x=date.time, y=SnowDensFix), group=1, size=1, na.rm=TRUE) + labs(x="Water Year 2020", y="Fresh Snow Density (kg/m^3)") + theme_classic() + PlotTheme + scale_x_datetime(date_breaks = "1 month", labels = date_format("%b")) + scale_y_continuous(breaks = custombreaks2, labels = every_nth(custombreaks2, 2, inverse=TRUE))
+
+ggsave(paste(PLOT,".png",sep=""), width = PlotWidth, height = PlotHeight)
+
+KalSnowDens_Mo$month <- factor(KalSnowDens_Mo$month, levels=c(9, 10, 11, 12, 1, 2, 3, 4, 5, 6, 7, 8))
+
+# USE THIS ONE
 PLOT = "Fresh Snow Dens - Q2i"
-custombreaks2 <- seq(0,200,20)
-ggplot(Kal_MonthlyDens) + geom_line(aes(x=month, y=MoAvgDens), group=1, size=1) + labs(x="Water Year 2020", y="Monthly Average Fresh Snow Density (kg/m^3)") + theme_classic() + PlotTheme + scale_x_discrete(labels=MonthLabels) + scale_y_continuous(breaks = custombreaks2, labels = every_nth(custombreaks2, 2, inverse=TRUE))
+custombreaks2 <- seq(0,700,20)
+ggplot(KalSnowDens_Mo) + geom_line(aes(x=month, y=MoSnoDens), group=1, size=1) + labs(x="Date", y="Monthly Average Fresh Snow Density (kg/m^3)") + theme_classic() + PlotTheme + scale_x_discrete(labels=MonthLabels) + scale_y_continuous(breaks = custombreaks2, labels = every_nth(custombreaks2, 2, inverse=TRUE))
 
 ggsave(paste(PLOT,".png",sep=""), width = PlotWidth, height = PlotHeight)
 
 ###################################################################################
 #Question 2ii - this is just the cumulative hourly precip as snow
 
+Kal_Correct$SnowDepth <- Kal_Correct$Precip_Snow_Dew / Kal_Correct$SnowDensFix
+
+Kal_SnowDepth <- Kal_Correct %>%
+  select(date.time, SnowDepth)
+
+Kal_SnowDepth <- na.omit(Kal_SnowDepth)
+
+Kal_SnowDepth <- Kal_SnowDepth %>%
+  mutate(SnowD_Cum = cumsum(SnowDepth))
+
 PLOT = "Cumulative Hourly Snowfall"
-custombreaks3 <- seq(0, 400, 50)
-ggplot(Kal_Correct) + theme_classic() + geom_line(aes(x=date.time, y=Precip_Snow_DewCum), size=1) + PlotTheme + labs(x="Date", y="Cumulative Hourly Snowfall (mm)") + scale_y_continuous(breaks = custombreaks3, labels = every_nth(custombreaks3, 2, inverse=TRUE)) + scale_x_datetime(date_breaks = "2 month", labels = date_format("%b %Y")) 
+custombreaks3 <- seq(0, 5, 0.5)
+ggplot(Kal_SnowDepth) + theme_classic() + geom_line(aes(x=date.time, y=SnowD_Cum), size=1) + PlotTheme + labs(x="Date", y="Cumulative Hourly Snowfall (m)") + scale_y_continuous(breaks = custombreaks3, labels = every_nth(custombreaks3, 2, inverse=TRUE)) + scale_x_datetime(date_breaks = "1 month", labels = date_format("%b %Y")) 
 
 ggsave(paste(PLOT,".png",sep=""), width = PlotWidth, height = PlotHeight)
 
