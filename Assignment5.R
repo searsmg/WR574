@@ -197,3 +197,6 @@ ggscatter(SNOTEL, x="AirTempAvg_C", y="FreshSnowDens", color = "black", shape = 
 
 
 SNOTEL.lm = lm(FreshSnowDens ~ AirTempAvg_C, data=SNOTEL)
+
+
+save(Kal_Correct, Kal_Albedo, file = "KalUpdate.Rdata")
