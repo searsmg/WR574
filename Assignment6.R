@@ -25,3 +25,19 @@ Kal_6$FreshSnow_m <- Kal_Albedo$Snow_Fresh
 
 #density at peak SWE is 315.2 kg/m^3 aka density max (from Black Mtn SNOTEL data)
 #using first order exponential function to model densification of snowpack
+
+Kal_6$SnoPDens <- 0
+
+Kal_6 <- Kal_6 %>%
+  mutate(SnoPDens = (lag(SnoPDens)-315.2)*exp^(-0.01) + 315.2 )
+
+
+
+Dens = Kal_6$SnoPDens
+
+for(i in 2:nrow(Kal_6)){
+    Dens[i] = ((Dens[i-1]))
+  }
+
+
+-315.2)*exp(-0.01)) + 315.2
