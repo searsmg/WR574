@@ -75,9 +75,6 @@ Kal6_Q2 <- Kal_6 %>%
   mutate(Dens_fresh = ifelse(SWE_fresh>0, 67.92 + (51.25*exp(DewTemp_C/2.59)), 0)) %>%
   mutate(FreshDepth = ifelse(Dens_fresh > 0, SWE_fresh/Dens_fresh, 0)) #now we have all 3 "fresh" vars
 
-write.csv(Kal6_Q2, "help.csv")
-#Kal6_Q2[is.na(Kal6_Q2)] <- 0
-
 #calculate old snow vars
 
 #depth and SWE old
@@ -103,7 +100,33 @@ Kal6_Q2 <- Kal6_Q2 %>%
 ggplot(Kal6_Q2) + geom_line(aes(x=date.time, y=Dens_all)) + PlotFormat
 
 ###################################################################################
-#Question 3
+#Question 3 - canopy interception modeling. Selected coniferous for species
+
+Kal6Q3 <- Kal_Correct %>%
+  select(date.time, AirTemp_C, PrecipCorr) %>%
+  mutate(month = month(date.time))
+
+Kal6Q3$FreshDens <- Kal6_Q2$Dens_fresh
+
+Kal6Q3 <- Kal6Q3 %>%
+  mutate(LAI = ifelse(month %in% c(6:9), 2, 1.6)) %>%
+  mutate(Rain = ifelse(AirTemp_C > 0, PrecipCorr, 0),
+         Snow = ifelse(AirTemp_C <= 0, PrecipCorr, 0)) %>%
+  mutate(RainInt_mm = ifelse(Rain > 0, 0.2*LAI, 0)) %>%
+  mutate(SnowIntMax_mm = ifelse(Snow > 0, 5.9*LAI*(0.27 + (46/FreshDens)), 0))
+
+Kal6Q3$SnowInt <- 0
+n <- nrow(Kal6Q3)
+
+for (i in 2:n){Kal6Q3$SnowInt[i] <-
+  if_else(Kal6Q3$snowyes == 1,
+          0.697 * (Kal6Q3$SnowIntMax_mm - Kal6Q3$SnowInt[i-1]) * (-(1-exp((0.25*Kal6Q3$Snow)/Kal6Q3$SnowIntMax_mm))), 0)}
 
 
+Kal6_Q2$Dens_old[1] <- NA
 
+x <- Kal6Q3$snowyes
+a <- Kal6Q3$SnowInt
+
+if (x[i] == 1) a[i] <- (Kal6Q3$SnowIntMax_mm - a[i-1]) * (-(1-exp((0.25*Kal6Q3$Snow)/Kal6Q3$SnowIntMax_mm))),
+else if (x[i] == 0]) a[i] <- 0
