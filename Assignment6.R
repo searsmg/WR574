@@ -10,16 +10,9 @@ library(RColorBrewer)
 load("~/Repos/WR574/KalUpdate.RData")
 setwd("C:/Users/sears/Documents/4_Classes_FA20/WR 574/Assignments/Assignment 6")
 
-Kal_test <- Kal_Correct %>%
-  mutate(FreshDens = ifelse(Precip_Snow_Air > 0, (67.92 + (51.25*exp(AirTemp_C/2.59))), 0))
-
 #lets clean up Kal_Correct before starting assignment - so many columns it's getting confusing. 
 Kal_6 <- Kal_Correct %>%
-  select(date.time, AirTemp_C, DewTemp_C, PrecipCorr, PrecipCorr_cumsum, Wind_ms, Precip_Snow_Dew, Precip_Snow_DewCum, Precip_Snow_Air, SnowDensFix, SnowDepth)
-
-# adding a few Kal_Albedo columns to Kal_6
-Kal_6$albedo <- Kal_Albedo$actual_al
-Kal_6$FreshSnow_m <- Kal_Albedo$Snow_Fresh
+  select(date.time, AirTemp_C, DewTemp_C, PrecipCorr, PrecipCorr_cumsum, Wind_ms, Precip_Snow_Dew, Precip_Snow_DewCum, SnowDensFix)
 
 ############################################################################
 
@@ -65,8 +58,6 @@ every_nth <- function(x, nth, empty = TRUE, inverse = FALSE)
     }
   }
 }
-
-
 ####################################################
 
 #Question 2
@@ -74,33 +65,34 @@ every_nth <- function(x, nth, empty = TRUE, inverse = FALSE)
 #density at peak SWE is 315.2 kg/m^3 aka density max (from Black Mtn SNOTEL data)
 #using first order exponential function to model densification of snowpack
 
-#few more tweaks to the main df used in Assignment 6
-Kal_6 <- Kal_6 %>%
-  mutate(FreshDens = ifelse(Precip_Snow_Air > 0, (67.92 + (51.25*exp(AirTemp_C/2.59))), 0))
-
-Kal_6$SWE_fresh <- Kal_6$Precip_Snow_Air
+Kal_6$SWE_fresh <- Kal_6$Precip_Snow_Dew
 
 #start a new df as I step through Q2
 
 #calculate fresh snow depth
 Kal6_Q2 <- Kal_6 %>%
-  select(date.time, SWE_fresh, FreshDens) %>%
-  mutate(FreshDepth = ifelse(FreshDens > 0, SWE_fresh/FreshDens, 0)) #now we have all 3 "fresh" vars
+  select(date.time, AirTemp_C, SWE_fresh, DewTemp_C) %>%
+  mutate(Dens_fresh = ifelse(SWE_fresh>0, 67.92 + (51.25*exp(DewTemp_C/2.59)), 0)) %>%
+  mutate(FreshDepth = ifelse(Dens_fresh > 0, SWE_fresh/Dens_fresh, 0)) #now we have all 3 "fresh" vars
+
+write.csv(Kal6_Q2, "help.csv")
+#Kal6_Q2[is.na(Kal6_Q2)] <- 0
 
 #calculate old snow vars
 
-#depth old
+#depth and SWE old
 Kal6_Q2 <- Kal6_Q2 %>%
-  mutate(SWE_old = cumsum(SWE_fresh),
-         Depth_old = cumsum(FreshDepth))
+  mutate(SWE_old = lag(cumsum(SWE_fresh)))
 
 #density old
 Kal6_Q2$Dens_old <- 0
 n <- nrow(Kal6_Q2)
-DO = Kal6_Q2$Dens_old
 
-if(n>1) for (i in 2:n) DO[i] <- ((DO[i-1] - 315.2)*exp(-0.01)) + 315.2
-DO[1] <- NA
+if(n>1) for (i in 562:n) Kal6_Q2$Dens_old[i] <- ((Kal6_Q2$Dens_old[i-1] - 315.2)*exp(-0.01)) + 315.2
+Kal6_Q2$Dens_old[1] <- NA
+
+Kal6_Q2 <- Kal6_Q2 %>%
+  mutate(Depth_old = ifelse(Dens_old >0, SWE_old/Dens_old, 0))
 
 #old + new calcs
 Kal6_Q2 <- Kal6_Q2 %>%
@@ -108,9 +100,10 @@ Kal6_Q2 <- Kal6_Q2 %>%
          Depth_all = Depth_old + FreshDepth) %>%
   mutate(Dens_all = ifelse(Depth_all>0, SWE_all/Depth_all, 0))
 
-
-
-
 ggplot(Kal6_Q2) + geom_line(aes(x=date.time, y=Dens_all)) + PlotFormat
+
+###################################################################################
+#Question 3
+
 
 
