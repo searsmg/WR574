@@ -6,6 +6,7 @@ library(ggplot2)
 library(dplyr)
 library(lubridate)
 library(RColorBrewer)
+library(scales)
 
 load("~/Repos/WR574/KalUpdate.RData")
 setwd("C:/Users/sears/Documents/4_Classes_FA20/WR 574/Assignments/Assignment 6")
@@ -97,7 +98,20 @@ Kal6_Q2 <- Kal6_Q2 %>%
          Depth_all = Depth_old + FreshDepth) %>%
   mutate(Dens_all = ifelse(Depth_all>0, SWE_all/Depth_all, 0))
 
-ggplot(Kal6_Q2) + geom_line(aes(x=date.time, y=Dens_all)) + PlotFormat
+PLOT = "Dens All-2b"
+custombreaks1 <- seq(0, 350, 50)
+ggplot(Kal6_Q2) + geom_line(aes(x=date.time, y=Dens_all), size=1) + PlotFormat + labs(y="Bulk snowpack density (kg/m^3)", x="Date") + scale_x_datetime(date_breaks = "2 month", labels = date_format("%b %Y")) + scale_y_continuous(breaks = custombreaks1, labels = every_nth(custombreaks1, 2, inverse=TRUE))
+
+ggsave(paste(PLOT,".png",sep=""), width = PlotWidth, height = PlotHeight)
+
+Kal6_Q2_edit <- Kal6_Q2 %>%
+  filter(date.time <= as.Date("2020-05-01"))
+
+PLOT = "Depths"
+custombreaks2 <- seq(0,4,0.5)
+ggplot() + geom_line(data = Kal6_Q2_edit, aes(x=date.time, y=Depth_all, colour="Depth w/ metamorphism"), size = 1) + geom_line(data=Kal_SnowDepth, aes(x=date.time, y=SnowD_Cum, colour="Cumulative Snowfall"), size=1) + PlotFormat + labs(x="Date", y="Snowfall/Depth (m)") + scale_x_datetime(date_breaks = "2 month", labels = date_format("%b %Y")) + scale_y_continuous(breaks = custombreaks2, labels = every_nth(custombreaks2, 2, inverse=TRUE))
+
+ggsave(paste(PLOT,".png",sep=""), width = PlotWidth, height = PlotHeight)
 
 ###################################################################################
 #Question 3 - canopy interception modeling. Selected coniferous for species
