@@ -20,7 +20,7 @@ Kal_6 <- Kal_Correct %>%
 #Plot Format
 
 #X-axis labels for plots that are monthly
-MonthLabels = c("Sep 2019", "Oct 2019", "Nov 2019", "Dec 2019", "Jan 2020", "Feb 2020", "Mar 2020", "Apr 200", "May 2020", "Jun 2020", "Jul 2020", "Aug 2020")
+MonthLabels = c("Sep", "Oct", "Nov", "Dec", "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug")
 
 #Plot size
 PlotWidth = 15
@@ -86,11 +86,13 @@ Kal6_Q2 <- Kal6_Q2 %>%
 Kal6_Q2$Dens_old <- 0
 n <- nrow(Kal6_Q2)
 
-if(n>1) for (i in 562:n) Kal6_Q2$Dens_old[i] <- ((Kal6_Q2$Dens_old[i-1] - 315.2)*exp(-0.01)) + 315.2
+if(n>1) for (i in 562:n) Kal6_Q2$Dens_old[i] <- ((Kal6_Q2$Dens_all[i-1] - 315.2)*exp(-0.01)) + 315.2
 Kal6_Q2$Dens_old[1] <- NA
+
 
 Kal6_Q2 <- Kal6_Q2 %>%
   mutate(Depth_old = ifelse(Dens_old >0, SWE_old/Dens_old, 0))
+
 
 #old + new calcs
 Kal6_Q2 <- Kal6_Q2 %>%
@@ -112,6 +114,8 @@ custombreaks2 <- seq(0,4,0.5)
 ggplot() + geom_line(data = Kal6_Q2_edit, aes(x=date.time, y=Depth_all, colour="Depth w/ metamorphism"), size = 1) + geom_line(data=Kal_SnowDepth, aes(x=date.time, y=SnowD_Cum, colour="Cumulative Snowfall"), size=1) + PlotFormat + labs(x="Date", y="Snowfall/Depth (m)") + scale_x_datetime(date_breaks = "2 month", labels = date_format("%b %Y")) + scale_y_continuous(breaks = custombreaks2, labels = every_nth(custombreaks2, 2, inverse=TRUE))
 
 ggsave(paste(PLOT,".png",sep=""), width = PlotWidth, height = PlotHeight)
+
+write.csv(Kal_SnowDepth, "CumSnowfall.csv")
 
 ###################################################################################
 #Question 3 - canopy interception modeling. Selected coniferous for species
@@ -136,11 +140,45 @@ for (i in 2:n){Kal6Q3$SnowInt[i] <-
   if_else(Kal6Q3$snowyes == 1,
           0.697 * (Kal6Q3$SnowIntMax_mm - Kal6Q3$SnowInt[i-1]) * (-(1-exp((0.25*Kal6Q3$Snow)/Kal6Q3$SnowIntMax_mm))), 0)}
 
-
 Kal6_Q2$Dens_old[1] <- NA
+#################################################################################
+#lets try Q3 again
 
-x <- Kal6Q3$snowyes
-a <- Kal6Q3$SnowInt
+Q3 <- read.csv("C:/Users/sears/Documents/4_Classes_FA20/WR 574/Assignments/Assignment 6/Q3.csv")
 
-if (x[i] == 1) a[i] <- (Kal6Q3$SnowIntMax_mm - a[i-1]) * (-(1-exp((0.25*Kal6Q3$Snow)/Kal6Q3$SnowIntMax_mm))),
-else if (x[i] == 0]) a[i] <- 0
+
+Q3 <- Q3 %>%
+  mutate(AllInt = SnowInt + RainInt_mm)
+
+Q3mo <- Q3 %>%
+  group_by(month) %>%
+  summarize(IntAll_moavg = mean(AllInt))
+            
+Q3_storms <- Q3 %>%
+  filter(AllInt >0)
+ 
+Q3storm_mo <- Q3_storms %>%
+  group_by(month) %>%
+  summarize(IntStorms = mean(AllInt))
+
+Q3mo$month <- factor(Q3mo$month, levels=c(9, 10, 11, 12, 1, 2, 3, 4, 5, 6, 7, 8))
+
+PLOT = "Monthly Avg for All Int"
+custombreaks1 <- seq(0, .1, 0.025)
+ggplot(Q3mo) + geom_line(aes(x=month, y=IntAll_moavg), group=1, size=1) + PlotFormat + scale_x_discrete(labels=MonthLabels) + labs(x="Water Year 2020", y="Monthly Average Interception (mm)") + scale_y_continuous(breaks = custombreaks1, labels = every_nth(custombreaks1, 2, inverse=TRUE))
+
+ggsave(paste(PLOT,".png",sep=""), width = PlotWidth, height = PlotHeight)
+
+
+Q3storm_mo$month <- factor(Q3storm_mo$month, levels=c(9, 10, 11, 12, 1, 2, 3, 4, 5, 6, 7, 8))
+
+PLOT = "Monthly Avg for Storm Int"
+custombreaks2 <- seq(0, 0.5, 0.05)
+ggplot(Q3storm_mo) + geom_line(aes(x=month, y=IntStorms), group=1, size=1) + PlotFormat + scale_x_discrete(labels=MonthLabels) + labs(x="Water Year 2020", y="Monthly Average Interception (mm)") + scale_y_continuous(breaks = custombreaks2, labels = every_nth(custombreaks2, 2, inverse=TRUE))
+
+ggsave(paste(PLOT,".png",sep=""), width = PlotWidth, height = PlotHeight)
+
+#######################################################################################
+
+
+
