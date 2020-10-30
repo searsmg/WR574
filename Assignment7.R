@@ -70,31 +70,42 @@ every_nth <- function(x, nth, empty = TRUE, inverse = FALSE)
 
 #Question 1i - monthly frequency of blowing snow
 
-#first, find the U10 using the empericl model (eq 8-2)
+#apply a lapse rate from 3 m to 1m since the U10 is measured at 10m
 Kal7 <- Kal7 %>%
-  mutate(U10 = (9.43 + (0.18*AirTemp_C) + (0.0033* (AirTemp_C^2))))
+  mutate(AirTlapse = AirTemp_C - 0.0455)
 
+#first, find the U10 using the empericl model (eq 8-2) and 3 conditions
+Kal7 <- Kal7 %>%
+  mutate(U10case = case_when(
+    between(AirTlapse, 0.1, 4.999) ~ "Wet",
+    between(AirTlapse, 5, 1000) ~ "Melting",
+    between(AirTlapse, -100, 0) ~ "Dry"))
+           
+Kal7$U10 <- recode(Kal7$U10case, "Wet" = 9.9, "Melting" = 0, "Dry" = (9.43 + (0.18*Kal7$AirTlapse) + (0.0033* (Kal7$AirTlapse^2))))         
+  
 # find how often the wind speed goes above U10
 Kal7 <- Kal7 %>%
-  mutate(U10exceed = if_else(U10 > Wind_ms, 1, 0)) %>%
-  mutate(U10exceedsnw = if_else(Precip_Snow_Dew > 0, U10exceed, 0))
+  mutate(U10exceed = if_else(Wind_ms > U10 & Precip_Snow_Dew >0, 1, 0)) 
+
+#%>%
+ # mutate(U10exceedsnw = if_else(Precip_Snow_Dew > 0, U10exceed, 0))
 
 #get freq value
 KalSnowBlow_Freq <- Kal7 %>%
   mutate(month = month(date.time)) %>%
-  group_by(month, U10exceedsnw) %>%
+  group_by(month, U10exceed) %>%
   summarize(n=n()) %>%
   mutate(freq = n / sum(n))
 
 #get freq value for ONLY when its exceeding (ie, snow is present and blowing)
 KalMo_snowblowfreq <- KalSnowBlow_Freq %>%
-  filter(U10exceedsnw > 0)
+  filter(U10exceed > 0)
 
 #factor months so they're in the same order as WYs
 KalMo_snowblowfreq$month <- factor(KalMo_snowblowfreq$month, levels=c(9, 10, 11, 12, 1, 2, 3, 4, 5, 6, 7, 8))
 
 PLOT = "Monthly Freq of Snow Blowing"
-custombreaks2 <- seq(0, 0.50, 0.1)
+custombreaks2 <- seq(0, .1, .01)
 ggplot(KalMo_snowblowfreq) + geom_col(aes(x=month, y=freq), group=1) + PlotFormat + scale_x_discrete(labels=MonthLabels) + labs(x="Water Year 2020", y="Frequency of blowing snow") + scale_y_continuous(breaks = custombreaks2, labels = every_nth(custombreaks2, 2, inverse=TRUE))
 
 ggsave(paste(PLOT,".png",sep=""), width = PlotWidth, height = PlotHeight)
@@ -103,7 +114,12 @@ ggsave(paste(PLOT,".png",sep=""), width = PlotWidth, height = PlotHeight)
 ###############################################################
 
 #Question 1ii
-
-
+Kal7 <- Kal7 %>%
+  mutate(SnowRedis_mm = if_else(U10exceed == 1, ((0.0000022*(U10^4.04))*3.6), 0)) %>%
+  mutate(SnowRedis_cum_mm = cumsum(SnowRedis_mm))
   
-
+PLOT="Cumulative Snow Redis Loss"
+breaks <- seq(0,7, 0.5)
+ggplot(Kal7) + geom_line(aes(x=date.time, y=SnowRedis_cum_mm), size=1) + PlotFormat + labs(y="Snow Redistribution Loss (mm)", x="Date") + scale_y_continuous(breaks = breaks, labels = every_nth(breaks, 2, inverse=TRUE)) + scale_x_datetime(date_breaks = "2 month", labels = date_format("%b %Y")) 
+  
+ggsave(paste(PLOT,".png",sep=""), width = PlotWidth, height = PlotHeight)
