@@ -4,7 +4,7 @@ library(ggplot2)
 library(dplyr)
 library(lubridate)
 library(waldo)
-libary(plyr)
+library(scales)
 
 rm(list=ls())
 
@@ -102,4 +102,31 @@ Kal8_new <- Kal8_new %>%
   mutate(sublim = if_else(AirTemp_C <= 0, kconstant * (AirDens/KalPress_mB)*Uz*(ea-esat), 0)) %>%
   mutate(sublim_cum = cumsum(sublim))
 
+PLOT = "Hourly Cumulative Sublimation"
+custombreaks2 <- seq(0, 70, 5)
+ggplot(Kal8_new) + geom_line(aes(x=date.time, y=sublim_cum), group=1) + PlotFormat + scale_x_datetime(date_breaks = "2 month", labels = date_format("%b %Y")) + labs(x="Water Year 2020", y="Sublimation (mm)") + scale_y_continuous(breaks = custombreaks2, labels = every_nth(custombreaks2, 2, inverse=TRUE))
+
+ggsave(paste(PLOT,".png",sep=""), width = PlotWidth, height = PlotHeight)
+
+##################################################################
+##################################################################
+
+#Question 3 - sublimation vs. blowing snow vs. undercatch
+
+#get undercatch - this is from the Kal_T df in the Assignment4data Rdata file
+Kalunder <- Kal_T %>%
+  select(date.time, PrecipCorr, Precip_mm) %>%
+  mutate(Undercatch_mm = (PrecipCorr-Precip_mm)) %>%
+  mutate(Under_CumSum = cumsum(Undercatch_mm))
+
+#get blowing snow amount - this is from assignment 7
+Kalblow <- Kal7 %>%
+  select(date.time, SnowRedis_mm)
+
+Kal8SubBlow <- merge(Kalblow, Kal8_new, by="date.time")
+
+Kal8SubBlow <- Kal8SubBlow %>%
+  select(date.time, SnowRedis_mm, sublim) %>%
+  mutate(BlowSub = SnowRedis_mm + sublim,
+         BlowSub_cum = cumsum(BlowSub))
 
