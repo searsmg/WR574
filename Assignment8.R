@@ -59,7 +59,7 @@ PlotFormat = theme(axis.text=element_text(size=20),
                    plot.title=element_text(size=26,face="bold",hjust=0.5, margin=margin(t=20, r=20, b=20, l=20)),      
                    legend.title=element_blank(),                                                                    
                    legend.text=element_text(size=20),                                                                   
-                   legend.position = "bottom", 
+                   legend.position = "right", 
                    panel.grid.major = element_blank(), 
                    panel.grid.minor = element_blank(),
                    panel.background = element_blank(), 
@@ -148,8 +148,20 @@ DoubleMass <- Kal8SubBlow
 DoubleMass <- merge(DoubleMass, Kalunder, by="date.time")
 
 
-PLOT="Double Mass Curve"
+PLOT="Double Mass Curve2"
 custombreaks3 <- seq(0,120, 20)
 ggplot(DoubleMass) + geom_line(aes(x=BlowSub_cum, y=Under_CumSum), size=1) + PlotFormat + labs(x="Sublimation + Blowing Snow (mm)",y="Undercatch (mm)") + geom_abline(intercept=0, slope=1, colour="Red") + scale_y_continuous(breaks = custombreaks3, labels = every_nth(custombreaks3, 2, inverse=TRUE)) + expand_limits(x=125) + scale_x_continuous(breaks = custombreaks3, labels = every_nth(custombreaks3, 2, inverse=TRUE))
+
+ggsave(paste(PLOT,".png",sep=""), width = PlotWidth, height = PlotHeight)
+
+DoubleMass <- DoubleMass %>%
+  mutate(month = month(date.time)) %>%
+  filter(month %in% c(9, 10, 11, 12, 1, 2, 3, 4))
+
+
+DoubleMass$month <- factor(DoubleMass$month, levels=c(9, 10, 11, 12, 1, 2, 3, 4,5))
+
+PLOT="Double Mass Curve2"
+ggplot(DoubleMass, aes(x=BlowSub_cum, y=Under_CumSum, na.rm=TRUE)) + geom_line(aes(color=month), size=2) + PlotFormat + labs(x="Sublimation + Blowing Snow (mm)",y="Undercatch (mm)") + geom_abline(intercept=0, slope=1, colour="black", size=1) + scale_y_continuous(breaks = custombreaks3, labels = every_nth(custombreaks3, 2, inverse=TRUE)) + expand_limits(x=125) + scale_x_continuous(breaks = custombreaks3, labels = every_nth(custombreaks3, 2, inverse=TRUE))
 
 ggsave(paste(PLOT,".png",sep=""), width = PlotWidth, height = PlotHeight)
