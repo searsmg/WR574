@@ -119,7 +119,12 @@ Kalunder <- Kal_T %>%
   mutate(Undercatch_mm = (PrecipCorr-Precip_mm)) %>%
   mutate(Under_CumSum = cumsum(Undercatch_mm))
 
-#get blowing snow amount - this is from assignment 7
+#get blowing snow cum sum
+Kalblow <- Kalblow %>%
+  mutate(Redis_Cum = cumsum(SnowRedis_mm))
+
+
+#get blowing and redis amount - this is from assignment 7
 Kalblow <- Kal7 %>%
   select(date.time, SnowRedis_mm)
 
@@ -130,3 +135,21 @@ Kal8SubBlow <- Kal8SubBlow %>%
   mutate(BlowSub = SnowRedis_mm + sublim,
          BlowSub_cum = cumsum(BlowSub))
 
+
+PLOT = "Snow Mass"
+custombreaks2 <- seq(0, 120, 20)
+ggplot() + geom_line(data=Kal8_new, aes(x=date.time, y=sublim_cum, colour="Sublimation"), group=1, size=1) + PlotFormat + scale_x_datetime(date_breaks = "2 month", labels = date_format("%b %Y")) + labs(x="Water Year 2020", y="Snow Mass (mm)") + scale_y_continuous(breaks = custombreaks2, labels = every_nth(custombreaks2, 2, inverse=TRUE)) + geom_line(data=Kalunder, aes(x=date.time, y=Under_CumSum, colour="Undercatch"), group=1, size=1) + geom_line(data=Kalblow, aes(x=date.time, y=Redis_Cum, colour="Blowing Snow"), group=1, size=1) + geom_line(data=Kal8SubBlow, aes(x=date.time, y=BlowSub_cum, colour="Sublimation + Blowing Snow"), group=1, size=1)
+
+ggsave(paste(PLOT,".png",sep=""), width = PlotWidth, height = PlotHeight)
+
+#question 3ii - cumulative undercatch to sub + blowing snow
+DoubleMass <- Kal8SubBlow
+
+DoubleMass <- merge(DoubleMass, Kalunder, by="date.time")
+
+
+PLOT="Double Mass Curve"
+custombreaks3 <- seq(0,120, 20)
+ggplot(DoubleMass) + geom_line(aes(x=BlowSub_cum, y=Under_CumSum), size=1) + PlotFormat + labs(x="Sublimation + Blowing Snow (mm)",y="Undercatch (mm)") + geom_abline(intercept=0, slope=1, colour="Red") + scale_y_continuous(breaks = custombreaks3, labels = every_nth(custombreaks3, 2, inverse=TRUE)) + expand_limits(x=125) + scale_x_continuous(breaks = custombreaks3, labels = every_nth(custombreaks3, 2, inverse=TRUE))
+
+ggsave(paste(PLOT,".png",sep=""), width = PlotWidth, height = PlotHeight)
