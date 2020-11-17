@@ -87,13 +87,14 @@ Kal9 <- Kal9 %>%
   mutate(Hl_in = Eatmos*omega*(AirTemp_K^4))
 
 #Hl_total
-Kal9 <- Kal9 %>%
-  mutate(Hl_total = Hl_in - Hl_out)
+Kal9filter<- Kal9 %>%
+  mutate(Hl_total = Hl_in - Hl_out) %>%
+  filter(date.time < "2020-04-15 00:00:00")
 
 #plot net hourly longwave rad
 PLOT = "Net Hourly Longwave Rad"
 custombreaks1 <- seq(0, 600, 100)
-ggplot(Kal9) + geom_line(aes(x=date.time, y=Hl_total), group=1) + PlotFormat + scale_x_datetime(date_breaks = "2 month", labels = date_format("%b %Y")) + labs(x="Water Year 2020", y="Net Hourly Longwave Radiation (W/m^2)") + scale_y_continuous(breaks = custombreaks1, labels = every_nth(custombreaks1, 2, inverse=TRUE))
+ggplot(Kal9filter) + geom_line(aes(x=date.time, y=Hl_total), group=1) + PlotFormat + scale_x_datetime(date_breaks = "1 month", labels = date_format("%b %Y")) + labs(x="Water Year 2020", y="Net Hourly Longwave Radiation (W/m^2)") + scale_y_continuous(breaks = custombreaks1, labels = every_nth(custombreaks1, 2, inverse=TRUE))
 
 ggsave(paste(PLOT,".png",sep=""), width = PlotWidth, height = PlotHeight)
 
@@ -101,3 +102,9 @@ ggsave(paste(PLOT,".png",sep=""), width = PlotWidth, height = PlotHeight)
 ##################################################################
 
 #question 2 - estimating net hourly shortwave radiation
+
+# get "J" which is day of year, then determine day angle in radians.
+Kal9filter <- Kal9filter %>%
+  mutate(Jday = as.numeric(strftime(date.time, format = "%j")),
+         DayAngle = (2*pi*(Jday-1))/365)
+
