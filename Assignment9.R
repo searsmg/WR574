@@ -122,3 +122,21 @@ Kal9filter <- Kal9filter %>%
 # now actually calculate Hkin
 Kal9filter <- Kal9filter %>%
   mutate(Hkin = 1367*Eo*(cos(Dec)*cos(-1.98968)*cos(0.2618*Tsn)+sin(Dec)*sin(-1.98968))*(0.355+(0.68*(1-CloudFrac))))
+
+#get alebdo from a diff assignment to calculate Hknet 
+Albedo <- Kal_Albedo %>%
+  select(date.time, actual_al)
+#rm(Kal9final)
+Kal9final <- merge(Albedo, Kal9filter, by="date.time")
+
+Kal9final <- Kal9final %>%
+  mutate(Hk = Hkin*(1-actual_al))
+
+#plot net hourly shortwave rad
+PLOT = "Net Hourly Shortwave Rad"
+custombreaks1 <- seq(-400, 600, 100)
+ggplot(Kal9final) + geom_line(aes(x=date.time, y=Hk), group=1, size=0.5) + PlotFormat + scale_x_datetime(date_breaks = "1 month", labels = date_format("%b %Y")) + labs(x="Water Year 2020", y="Net Hourly Shortwave Radiation (W/m^2)") + scale_y_continuous(breaks = custombreaks1, labels = every_nth(custombreaks1, 2, inverse=TRUE))
+
+ggsave(paste(PLOT,".png",sep=""), width = PlotWidth, height = PlotHeight)
+
+####################################################################################
