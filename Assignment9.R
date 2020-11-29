@@ -106,5 +106,19 @@ ggsave(paste(PLOT,".png",sep=""), width = PlotWidth, height = PlotHeight)
 # get "J" which is day of year, then determine day angle in radians.
 Kal9filter <- Kal9filter %>%
   mutate(Jday = as.numeric(strftime(date.time, format = "%j")),
-         DayAngle = (2*pi*(Jday-1))/365)
+         DayAngle = (2*pi*(Jday-1))/365) %>%
+  mutate(Eo = 1.000110 + (0.34221 * cos(DayAngle)) + (0.001280 * sin(DayAngle)) + (0.000719 * cos (2*DayAngle)) + (0.000077 * sin(2*DayAngle)),
+         Dec = 0.006918 - (0.39912 * cos(DayAngle)) + (0.070257 * sin(DayAngle)) - (0.006758 * cos(2*DayAngle)) + (0.000907 * sin(2*DayAngle)) - (0.002697 * cos(3*DayAngle)) + (0.00148 * sin(3*DayAngle))) %>%
+  mutate(Dec_deg = (Dec*180)/pi,
+         Et = 0.000292 + (0.007264 *  cos(DayAngle)) - (0.12474*sin(DayAngle)) - (0.05684 * cos(2*DayAngle)) - (0.15886 * sin(2*DayAngle)))
 
+# longitude correction= (-114 - 8)/15 then convert to radians to get -0.1419. -114 = longitude of Kalispell MT
+Kal9filter$hour <- hour(Kal9filter$date.time)
+Kal9filter <- Kal9filter %>%
+  mutate(Tsn = (hour + (-0.1419) + Et) - 12,
+         Zenith = acos(cos(Dec)*cos(-1.98968)*cos(0.2618*Tsn)+sin(Dec)*sin(-1.98968))) %>%
+  mutate(Zenith_use = if_else(cos(Zenith)<0,0,Zenith))
+
+# now actually calculate Hkin
+Kal9filter <- Kal9filter %>%
+  mutate(Hkin = 1367*Eo*(cos(Dec)*cos(-1.98968)*cos(0.2618*Tsn)+sin(Dec)*sin(-1.98968))*(0.355+(0.68*(1-CloudFrac))))
