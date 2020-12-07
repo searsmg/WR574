@@ -132,11 +132,58 @@ Kal9final <- merge(Albedo, Kal9filter, by="date.time")
 Kal9final <- Kal9final %>%
   mutate(Hk = Hkin*(1-actual_al))
 
+Kalfinalfilter <- Kal9final %>%
+  filter(Hk > 0)
+
 #plot net hourly shortwave rad
 PLOT = "Net Hourly Shortwave Rad"
 custombreaks1 <- seq(-400, 600, 100)
-ggplot(Kal9final) + geom_line(aes(x=date.time, y=Hk), group=1, size=0.5) + PlotFormat + scale_x_datetime(date_breaks = "1 month", labels = date_format("%b %Y")) + labs(x="Water Year 2020", y="Net Hourly Shortwave Radiation (W/m^2)") + scale_y_continuous(breaks = custombreaks1, labels = every_nth(custombreaks1, 2, inverse=TRUE))
+ggplot(Kalfinalfilter) + geom_line(aes(x=date.time, y=Hk), group=1, size=0.5) + PlotFormat + scale_x_datetime(date_breaks = "1 month", labels = date_format("%b %Y")) + labs(x="Water Year 2020", y="Net Hourly Shortwave Radiation (W/m^2)") + scale_y_continuous(breaks = custombreaks1, labels = every_nth(custombreaks1, 2, inverse=TRUE))
 
 ggsave(paste(PLOT,".png",sep=""), width = PlotWidth, height = PlotHeight)
 
 ####################################################################################
+
+#question 3 - snowpack energy from precip 
+
+#make a snow temp column
+Kalfinalfilter <- Kalfinalfilter %>%
+  mutate(precipsnow9 = if_else(AirTemp_C <0, PrecipCorr, 0),
+         preciprain9 = if_else(AirTemp_C >0, PrecipCorr, 0)) %>%
+  mutate(preciptemp = AirTemp_C)
+
+getSWE <- Kal_Correct %>%
+  select(date.time, SnowDepth) %>%
+  mutate(SnowD_mm = SnowDepth*100)
+
+
+Kal9q3 <- merge(Kalfinalfilter, getSWE, by="date.time")
+
+Kal9q3 <- Kal9q3 %>%
+  mutate(Hp = if_else(AirTemp_C >0, (preciptemp * SnowD_mm * 4.19), 0))
+
+Kal9q3[is.na(Kal9q3)] <- 0
+
+Kal9q3 <- Kal9q3 %>%
+   mutate(HpSum = cumsum(Hp))
+
+#plot net hourly cumulative enery from rain
+PLOT = "Net Hourly Energy from Rain"
+custombreaks2 <- seq(0, 200, 20)
+ggplot(Kal9q3) + geom_line(aes(x=date.time, y=HpSum), group=1, size=0.5) + PlotFormat + scale_x_datetime(date_breaks = "1 month", labels = date_format("%b %Y")) + labs(x="Water Year 2020", y="Cumulative Hourly Energy for Precip (W/m^2)") + scale_y_continuous(breaks = custombreaks2, labels = every_nth(custombreaks2, 2, inverse=TRUE))
+
+ggsave(paste(PLOT,".png",sep=""), width = PlotWidth, height = PlotHeight)
+
+#######################################################
+
+#question 4 energy balance using the 3 things calculated
+
+Kal9q3 <- Kal9q3 %>%
+  mutate(Htotal = Hp + Hk + Hl_total)
+
+#plot net hourly shortwave rad
+PLOT = "Net Hourly Rad"
+custombreaks1 <- seq(-400, 600, 100)
+ggplot(Kal9q3) + geom_line(aes(x=date.time, y=Htotal), group=1, size=0.5) + PlotFormat + scale_x_datetime(date_breaks = "1 month", labels = date_format("%b %Y")) + labs(x="Water Year 2020", y="Net Hourly Radiation (W/m^2)") + scale_y_continuous(breaks = custombreaks1, labels = every_nth(custombreaks1, 2, inverse=TRUE))
+
+ggsave(paste(PLOT,".png",sep=""), width = PlotWidth, height = PlotHeight)
